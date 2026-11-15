@@ -81,7 +81,11 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
                     List.copyOf(section.getStringList("exclusive_set")),
                     List.copyOf(section.getStringList("slots")),
                     Math.max(1, Math.min(1024, section.getInt("weight", 10))),
-                    Math.max(1, Math.min(255, section.getInt("max_level", 1))),
+                    // Force the nine offensive tier families to the same
+                    // native ceiling as vanilla Sharpness/Smite/Bane: V.
+                    // Overrides max_level: 30/50 in already-installed YAML.
+                    name.matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")
+                            ? 5 : Math.max(1, Math.min(255, section.getInt("max_level", 1))),
                     Math.max(1, section.getInt("min_cost_base", 5)),
                     Math.max(0, section.getInt("min_cost_per_level", 10)),
                     Math.max(1, section.getInt("max_cost_base", 50)),
