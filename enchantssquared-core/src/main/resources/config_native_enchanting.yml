@@ -6,27 +6,25 @@
 # They may be overridden in plugins/ValhallaMMO/skills/enchanting.yml under
 # quoted scalings."enchantssquared:lesser_sharpness" etc. No Valhalla jar edit.
 #
-# The tier selector passes normalized quality to getScaledLevel:
-#   normalized_rating = (effective_quality - band_start_quality) * 100 / quality_per_level
-# This keeps the approved 650/855/1090/1295/1520 quality gates authoritative.
-# Native tier levels are I–V, exactly like their vanilla family.
-# Existing family-specific and generic offensive perks improve enchanting
-# quality by 5 points per earned perk-bonus level (configurable); they cannot
-# bypass NG gates or produce a custom tier level VI.
-# The registry and the NG tier listener independently enforce max level V.
+# Normal registry max_level is V; ValhallaMMO amplification may produce VI+.
+# Native tiers inherit the same original enchanting skill rating and vanilla
+# scaling formula as Sharpness/Smite/Bane (not normalized NG band quality).
+# NG/perks decide WHICH native tier a player can receive, not the amplified
+# level. We preserve Valhalla's already-scaled vanilla roll, avoiding double
+# amplification.
 #
+# 45 limits the scaling component, not the enchanted item's total level.
 native_scalings_enabled: true
-tier_perk_quality_per_bonus: 5.0
 native_scalings:
-  lesser_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  lesser_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  lesser_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  advanced_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  advanced_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  advanced_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  supreme_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  supreme_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
-  supreme_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  lesser_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  lesser_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  lesser_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
 
 # Optional translation of ValhallaMMO enchanting perk bonuses to real custom enchantments
 enabled: true
