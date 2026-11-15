@@ -164,9 +164,7 @@ public final class ValhallaTierEnchantingListener implements Listener {
             // as ValhallaMMO calculated it, including its custom level bonus.
             if (chosen == null && rolls.containsKey(base)) {
                 removeTierAlternatives(rolls, family);
-                // ValhallaMMO adds its perk bonuses after applying the
-                // scaling's configured upper bound. Enforce vanilla V here.
-                // Retain the vanilla scaled level, even if it exceeds V.
+                // Keep the complete vanilla scaled result (VI+ included).
                 continue;
             }
 
