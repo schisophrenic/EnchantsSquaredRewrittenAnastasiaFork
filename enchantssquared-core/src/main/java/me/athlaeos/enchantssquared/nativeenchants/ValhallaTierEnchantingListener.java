@@ -4,6 +4,7 @@ import me.athlaeos.enchantssquared.EnchantsSquared;
 import me.athlaeos.valhallammo.playerstats.AccumulativeStatManager;
 import me.athlaeos.valhallammo.playerstats.profiles.ProfileCache;
 import me.athlaeos.valhallammo.playerstats.profiles.implementations.PowerProfile;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,63 +19,79 @@ import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Substitutes base enchantments with the highest unlocked tier.
+ * Player-specific replacement of ordinary enchants with NG-bound levels and
+ * optional perk-bound special enchantment bonus rolls.
  *
- * Requirements:
- * 1. Enchanting QUALITY must reach the tier's configured threshold.
- * 2. ALL required ValhallaMMO perks must be unlocked.
- *
- * Higher-tier entries are NOT in the enchanting-table datapack tag. Therefore
- * they cannot roll by themselves and do not bypass perk requirements.
+ * Source tiers are never added to the regular global enchanting-table tag.
+ * This listener checks eligibility on BOTH preview and final item enchant.
  */
 public final class ValhallaTierEnchantingListener implements Listener {
-    private record Tier(NamespacedKey enchantment, int minimumQuality, List<String> perks) {}
+    private record Band(NamespacedKey enchantment, int ng, int minimumQuality,
+                        int qualityStep, int firstLevel, int maxLevel, List<String> perks) {}
+    private record Family(NamespacedKey base, List<String> perks, List<Band> bands) {}
+    private record Choice(Enchantment enchantment, int level) {}
+    private record Bonus(NamespacedKey enchantment, List<String> perks, int quality,
+                         int requiredNg, double chance, int baseLevel, int qualityStep) {}
 
-    private final Map<NamespacedKey, List<Tier>> families = new LinkedHashMap<>();
+    private final Map<NamespacedKey, Family> families = new LinkedHashMap<>();
+    private final List<Bonus> bonusEnchants = new ArrayList<>();
+    private final int maximumBonusEnchants;
 
     public ValhallaTierEnchantingListener(YamlConfiguration config) {
-        ConfigurationSection section = config.getConfigurationSection("tier_families");
-        if (section == null) return;
-        for (String familyId : section.getKeys(false)) {
-            String path = "tier_families." + familyId;
-            String baseId = config.getString(path + ".base");
-            NamespacedKey base = baseId == null ? null : NamespacedKey.fromString(baseId);
+        maximumBonusEnchants = Math.max(0, Math.min(10, config.getInt("settings.maximum_bonus_enchantments", 1)));
+        ConfigurationSection sections = config.getConfigurationSection("tier_families");
+        if (sections != null) for (String name : sections.getKeys(false)) {
+            String prefix = "tier_families." + name;
+            NamespacedKey base = parse(config.getString(prefix + ".base"));
             if (base == null) {
-                EnchantsSquared.logWarning("Invalid tier family base: " + familyId);
+                EnchantsSquared.logWarning("Invalid base for native enchanting family " + name);
                 continue;
             }
-            List<Tier> rules = new ArrayList<>();
-            for (Map<?, ?> tier : config.getMapList(path + ".tiers")) {
-                Object targetValue = tier.get("enchantment");
-                NamespacedKey target = targetValue == null ? null : NamespacedKey.fromString(targetValue.toString());
-                if (target == null || !target.getNamespace().equals("enchantssquared")) {
-                    EnchantsSquared.logWarning("Invalid tier enchantment in " + familyId);
-                    continue;
-                }
-                int quality = 0;
-                Object rawQuality = tier.get("minimum_enchanting_quality");
-                if (rawQuality instanceof Number number) quality = number.intValue();
-                else if (rawQuality != null) try { quality = Integer.parseInt(rawQuality.toString()); }
-                catch (NumberFormatException ignored) { continue; }
+            List<Band> bands = new ArrayList<>();
+            for (Map<?, ?> tier : config.getMapList(prefix + ".tiers")) {
+                NamespacedKey id = parse(Objects.toString(tier.get("enchantment"), ""));
+                if (id == null) continue;
+                List<String> tierPerks = asStrings(tier.get("required_perks"));
+                Object stages = tier.get("progression");
+                if (!(stages instanceof List<?> list)) continue;
 
-                List<String> perks = new ArrayList<>();
-                Object rawPerks = tier.get("required_perks");
-                if (rawPerks instanceof Collection<?> values) for (Object value : values) {
-                    if (value != null && !value.toString().isBlank()) perks.add(value.toString());
+                for (Object stage : list) {
+                    if (!(stage instanceof Map<?, ?> row)) continue;
+                    int ng = Math.max(1, number(row.get("required_ng"), 1));
+                    int minimum = Math.max(0, number(row.get("quality_at_first_level"), 0));
+                    int step = Math.max(1, number(row.get("quality_per_level"), 1));
+                    int first = Math.max(1, number(row.get("first_level"), 1));
+                    int cap = Math.max(first, number(row.get("max_level"), first));
+                    bands.add(new Band(id, ng, minimum, step, first, cap, tierPerks));
                 }
-                // A tier without a required perk cannot accidentally become available to everybody.
-                if (perks.isEmpty()) {
-                    EnchantsSquared.logWarning("Tier " + target + " is missing required_perks; ignored");
-                    continue;
-                }
-                rules.add(new Tier(target, Math.max(0, quality), List.copyOf(perks)));
             }
-            rules.sort(Comparator.comparingInt(Tier::minimumQuality).reversed());
-            if (!rules.isEmpty()) families.put(base, List.copyOf(rules));
+            // Supreme/Advanced first; for each tier the highest available NG band wins.
+            bands.sort(Comparator.comparingInt(Band::ng).reversed());
+            if (!bands.isEmpty()) families.put(base, new Family(base, config.getStringList(prefix + ".required_perks"), bands));
         }
-        EnchantsSquared.logInfo("Loaded " + families.size() + " perk-gated enchanting families");
+
+        ConfigurationSection perkSection = config.getConfigurationSection("perk_enchantments");
+        if (perkSection != null) for (String name : perkSection.getKeys(false)) {
+            ConfigurationSection item = perkSection.getConfigurationSection(name);
+            if (item == null || !item.getBoolean("enabled", true)) continue;
+            NamespacedKey id = parse(item.getString("enchantment"));
+            List<String> perks = item.getStringList("required_perks");
+            if (id == null || perks.isEmpty()) {
+                EnchantsSquared.logWarning("Perk-enchantment '" + name + "' needs an enchantment ID and required_perks");
+                continue;
+            }
+            bonusEnchants.add(new Bonus(id, List.copyOf(perks),
+                    item.getInt("minimum_enchanting_quality", 0), item.getInt("minimum_ng", 0),
+                    Math.max(0, Math.min(1, item.getDouble("chance", 0))),
+                    Math.max(1, item.getInt("fixed_level", 1)),
+                    Math.max(0, item.getInt("quality_per_level", 0))));
+        }
+
+        EnchantsSquared.logInfo("Loaded " + families.size() + " tier families and "
+                + bonusEnchants.size() + " perk-only enchantment rolls.");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -83,64 +100,135 @@ public final class ValhallaTierEnchantingListener implements Listener {
         Player player = event.getEnchanter();
         int quality = enchantingQuality(player);
         Set<String> perks = unlockedPerks(player);
+        int ng = ngLevel(perks);
+
         for (EnchantmentOffer offer : event.getOffers()) {
             if (offer == null) continue;
-            NamespacedKey base = offer.getEnchantment().getKey();
-            List<Tier> family = families.get(base);
-            if (family == null) continue;
-            Enchantment replacement = choose(family, quality, perks);
-            if (replacement == null) continue;
-            offer.setEnchantment(replacement);
-            offer.setEnchantmentLevel(Math.max(1,
-                    Math.min(offer.getEnchantmentLevel(), replacement.getMaxLevel())));
+            for (Family family : families.values()) {
+                if (!matchesFamily(offer.getEnchantment(), family)) continue;
+                Choice replacement = choose(family, quality, ng, perks);
+                if (replacement != null) {
+                    offer.setEnchantment(replacement.enchantment());
+                    offer.setEnchantmentLevel(replacement.level());
+                } else {
+                    Enchantment base = Registry.ENCHANTMENT.get(family.base());
+                    if (base != null) offer.setEnchantment(base);
+                }
+                break;
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEnchant(EnchantItemEvent event) {
-        if (families.isEmpty()) return;
-        int quality = enchantingQuality(event.getEnchanter());
-        Set<String> perks = unlockedPerks(event.getEnchanter());
-        Map<Enchantment, Integer> rolled = event.getEnchantsToAdd();
+        Player player = event.getEnchanter();
+        int quality = enchantingQuality(player);
+        Set<String> perks = unlockedPerks(player);
+        int ng = ngLevel(perks);
+        Map<Enchantment, Integer> rolls = event.getEnchantsToAdd();
 
-        for (Map.Entry<NamespacedKey, List<Tier>> family : families.entrySet()) {
-            Enchantment base = Registry.ENCHANTMENT.get(family.getKey());
+        for (Family family : families.values()) {
+            Enchantment base = Registry.ENCHANTMENT.get(family.base());
             if (base == null) continue;
-
-            // Handle both vanilla-roll maps and servers where changing the
-            // preview offer already puts the custom enchantment into the map.
-            int level = rolled.getOrDefault(base, 0);
-            for (Tier tier : family.getValue()) {
-                Enchantment tierEnchant = Registry.ENCHANTMENT.get(tier.enchantment());
-                if (tierEnchant != null) level = Math.max(level, rolled.getOrDefault(tierEnchant, 0));
+            boolean exists = rolls.containsKey(base);
+            for (Band band : family.bands()) {
+                Enchantment e = Registry.ENCHANTMENT.get(band.enchantment());
+                if (e != null && rolls.containsKey(e)) exists = true;
             }
-            if (level <= 0) continue;
-            rolled.remove(base);
-            for (Tier tier : family.getValue()) {
-                Enchantment tierEnchant = Registry.ENCHANTMENT.get(tier.enchantment());
-                if (tierEnchant != null) rolled.remove(tierEnchant);
+            if (!exists) continue;
+
+            Choice chosen = choose(family, quality, ng, perks);
+            // If no tier is unlocked, retain the vanilla enchantment exactly
+            // as ValhallaMMO calculated it, including its custom level bonus.
+            if (chosen == null && rolls.containsKey(base)) {
+                removeTierAlternatives(rolls, family);
+                continue;
             }
 
-            Enchantment replacement = choose(family.getValue(), quality, perks);
-            Enchantment winner = replacement == null ? base : replacement;
-            int winnerLevel = Math.max(1, Math.min(level, winner.getMaxLevel()));
-            rolled.put(winner, winnerLevel);
+            int previousLevel = rolls.getOrDefault(base, 1);
+            for (Band band : family.bands()) {
+                Enchantment tier = Registry.ENCHANTMENT.get(band.enchantment());
+                if (tier != null) previousLevel = Math.max(previousLevel, rolls.getOrDefault(tier, 0));
+            }
+            rolls.remove(base);
+            removeTierAlternatives(rolls, family);
+            if (chosen == null) {
+                rolls.put(base, previousLevel);
+            } else {
+                rolls.put(chosen.enchantment(), chosen.level());
+            }
+        }
+
+        int added = 0;
+        for (Bonus bonus : bonusEnchants) {
+            if (added >= maximumBonusEnchants) break;
+            if (ng < bonus.requiredNg() || quality < bonus.quality() || !perks.containsAll(bonus.perks())) continue;
+            Enchantment enchantment = Registry.ENCHANTMENT.get(bonus.enchantment());
+            if (enchantment == null || rolls.containsKey(enchantment)) continue;
+            Material material = event.getItem().getType();
+            if (material != Material.BOOK && material != Material.ENCHANTED_BOOK
+                    && !enchantment.canEnchantItem(event.getItem())) continue;
+            if (rolls.keySet().stream().anyMatch(enchantment::conflictsWith)) continue;
+            if (event.getItem().getEnchantments().keySet().stream().anyMatch(enchantment::conflictsWith)) continue;
+            if (ThreadLocalRandom.current().nextDouble() >= bonus.chance()) continue;
+
+            int level = bonus.baseLevel();
+            if (bonus.qualityStep() > 0) level += (quality - bonus.quality()) / bonus.qualityStep();
+            rolls.put(enchantment, Math.max(1, Math.min(enchantment.getMaxLevel(), level)));
+            added++;
         }
     }
 
-    private static Enchantment choose(List<Tier> family, int quality, Set<String> perks) {
-        for (Tier tier : family) {
-            if (quality < tier.minimumQuality() || !perks.containsAll(tier.perks())) continue;
-            Enchantment registered = Registry.ENCHANTMENT.get(tier.enchantment());
-            if (registered != null) return registered;
+    private static Choice choose(Family family, int quality, int ng, Set<String> perks) {
+        if (!perks.containsAll(family.perks())) return null;
+        for (Band band : family.bands()) {
+            if (ng < band.ng() || quality < band.minimumQuality() || !perks.containsAll(band.perks())) continue;
+            Enchantment registered = Registry.ENCHANTMENT.get(band.enchantment());
+            if (registered == null) continue;
+            int bonusLevels = (quality - band.minimumQuality()) / band.qualityStep();
+            int level = Math.min(band.maxLevel(), band.firstLevel() + bonusLevels);
+            return new Choice(registered, Math.max(1, Math.min(level, registered.getMaxLevel())));
         }
         return null;
+    }
+
+    private static void removeTierAlternatives(Map<Enchantment, Integer> rolls, Family family) {
+        for (Band band : family.bands()) {
+            Enchantment tier = Registry.ENCHANTMENT.get(band.enchantment());
+            if (tier != null) rolls.remove(tier);
+        }
+    }
+
+    private static boolean matchesFamily(Enchantment enchantment, Family family) {
+        if (enchantment.getKey().equals(family.base())) return true;
+        for (Band band : family.bands()) {
+            if (enchantment.getKey().equals(band.enchantment())) return true;
+        }
+        return false;
+    }
+
+    private static NamespacedKey parse(String id) {
+        if (id == null || id.isBlank()) return null;
+        return NamespacedKey.fromString(id);
+    }
+
+    private static int number(Object raw, int fallback) {
+        if (raw instanceof Number n) return n.intValue();
+        try { return Integer.parseInt(Objects.toString(raw)); }
+        catch (RuntimeException ignored) { return fallback; }
+    }
+
+    private static List<String> asStrings(Object raw) {
+        if (!(raw instanceof Collection<?> values)) return List.of();
+        List<String> strings = new ArrayList<>();
+        for (Object value : values) if (value != null && !value.toString().isBlank()) strings.add(value.toString());
+        return List.copyOf(strings);
     }
 
     private static int enchantingQuality(Player player) {
         double base = AccumulativeStatManager.getCachedStats("ENCHANTING_QUALITY", player, 10000, true);
         double fraction = AccumulativeStatManager.getCachedStats("ENCHANTING_FRACTION_QUALITY", player, 10000, true);
-        return (int) (base * (1 + fraction));
+        return Math.max(0, (int) (base * (1 + fraction)));
     }
 
     private static Set<String> unlockedPerks(Player player) {
@@ -149,5 +237,12 @@ public final class ValhallaTierEnchantingListener implements Listener {
         result.addAll(profile.getPermanentlyUnlockedPerks());
         result.addAll(profile.getFakeUnlockedPerks());
         return result;
+    }
+
+    private static int ngLevel(Set<String> perks) {
+        for (int ng = 6; ng >= 1; ng--) {
+            if (perks.contains("enchanting_perk_ng" + ng)) return ng;
+        }
+        return 0;
     }
 }
