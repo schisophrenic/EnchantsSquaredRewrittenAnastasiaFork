@@ -247,27 +247,19 @@ enchantments:
           duration_ticks: 40
           amplifier: 0
 
-# A family is rolled from its vanilla base, then becomes the highest eligible tier.
-# NG stage is checked using permanent ValhallaMMO perk IDs, NOT merely quality.
-# A branch perk is also required. This example binds all three offensive families
-# to the already-existing "enchanting_perk_sharpnesses" perk.
+# A family is selected from its vanilla enchant, using NG/perk/quality gates.
+# The player must have enchanting_perk_sharpnesses for these offensive tiers.
 #
-# quality_at_first_level: effective ENCHANTING_QUALITY where the band starts.
-# quality_per_level: effective quality required for each additional enchantment level.
-# Level selection uses floor((quality - quality_at_first_level) / quality_per_level).
+# quality_at_first_level is the effective ENCHANTING_QUALITY threshold for
+# UNLOCKING the stage, not a cap on the enchantment level.
+# Once eligible, the native tier inherits ValhallaMMO's ALREADY-AMPLIFIED
+# vanilla enchantment level (VI, VII, VIII and beyond). We do not scale twice.
+# Native registry max_level=5 is just the normal enchantment maximum.
 #
-# The quality windows below are tuned to the uploaded progression's no-external-buff
-# benchmark Q~753 at NG1 lv125; 985 NG2 lv150; 1190 NG3 lv175; 1410 NG4 lv200;
-# and 1785 NG5 lv200, assuming the main and NG quality perks are purchased.
-# Every offensive tier is a real enchantment with max_level: 5.
-# Normal enchanting table still checks NG stage and perks, and the same
-# vanilla-family effect formulas run with their own tier's I-V level.
-# Admin /enchant can award registered tiers directly (bypasses table restrictions).
-# All tier quality gates are intentionally 100 ABOVE the previous calibration:
-# unlocking a new NG is not sufficient to reach that tier's maximum level.
-# NG1: Lesser I-III 650..830; NG2: Lesser IV-V 855..1083
-# NG3: Advanced I-III 1090..1288; NG4: Advanced IV-V 1295..1504
-# NG5: Supreme I-V 1520..1872. No tier may exceed level V.
+# Unlock thresholds: NG1 Lesser Q650; NG2 Lesser Q855;
+# NG3 Advanced Q1090; NG4 Advanced Q1295; NG5 Supreme Q1520.
+# Legacy quality_per_level, first_level and max_level values in existing
+# server configs are ignored; they no longer cap the scaled level.
 tier_families:
   sharpness:
     base: minecraft:sharpness
@@ -278,33 +270,18 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 90
-            first_level: 1
-            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 228
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:advanced_sharpness
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 99
-            first_level: 1
-            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 209
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:supreme_sharpness
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 88
-            first_level: 1
-            max_level: 5
   smite:
     base: minecraft:smite
     required_perks:
@@ -314,33 +291,18 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 90
-            first_level: 1
-            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 228
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:advanced_smite
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 99
-            first_level: 1
-            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 209
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:supreme_smite
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 88
-            first_level: 1
-            max_level: 5
   bane_of_arthropods:
     base: minecraft:bane_of_arthropods
     required_perks:
@@ -350,33 +312,18 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 90
-            first_level: 1
-            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 228
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:advanced_bane_of_arthropods
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 99
-            first_level: 1
-            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 209
-            first_level: 4
-            max_level: 5
       - enchantment: enchantssquared:supreme_bane_of_arthropods
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 88
-            first_level: 1
-            max_level: 5
 
 # Existing ValhallaMMO enchanting perks approved for categories.
 # These IDs come from enchanting_progression.yml; no changes to the
