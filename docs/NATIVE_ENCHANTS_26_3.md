@@ -44,26 +44,63 @@ After changing or adding any \`enchantments:\` registry YAML entry, FULLY
 RESTART the server. The registry freezes before onEnable; neither /reload nor
 /esnative can register additional IDs in a running server.
 
-## Quality thresholds (the user's +100 adjustment)
+## Vanilla-style scaling above level V (current implementation)
 
-| Current enchanting NG | Tier | Allowed levels | Starting quality | Quality reaching level cap |
-|---|---|---|---|---|
-| 1 | Lesser | I-III | 650 | 830 |
-| 2 | Lesser | IV-V | 855 | 1083 |
-| 3 | Advanced | I-III | 1090 | 1288 |
-| 4 | Advanced | IV-V | 1295 | 1504 |
-| 5 | Supreme | I-V | 1520 | 1872 |
+The Paper native enchantment registry still declares **max_level: 5** for each
+Lesser/Advanced/Supreme version of Sharpness, Smite, and Bane of Arthropods.
+That is the normal unamplified limit, just as for vanilla enchantments.
 
-NG stage is a hard ceiling; effective quality is computed from
-\`ENCHANTING_QUALITY * (1 + ENCHANTING_FRACTION_QUALITY)\`.
-The actual enchanted level in an eligible band is
-\`min(cap, first_level + floor((quality - quality_at_first_level) / quality_per_level))\`.
-If the player hasn't reached the newest band's quality threshold, the previous
-eligible tier remains available.
+ValhallaMMO can enchant these items with **level VI and higher** using its
+standard enchanting skill rating, amplification chance, and specific/generic
+perk bonuses. In particular, the uploaded original `skills/enchanting.yml`
+uses `(2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45` for all three vanilla
+families. The value 45 caps the **scaling contribution**, not the total level.
 
-All three tier families are tied to ValhallaMMO's existing
-\`enchanting_perk_sharpnesses\`: Sharpness, Smite and Bane of Arthropods.
-Every tier has the same maximum level as its vanilla parent: **V**. The game registry enforces this limit, even for previously-installed YAML that still says 30/50.
+The `NativeValhallaScalingBridge` registers this same formula under each
+native enchantment key. It accepts custom override formulas but migrates the
+incorrect `(1/100) * %rating%,ADD_ON_DEFAULT,0,5` formula from the previous
+test automatically. If the user's ValhallaMMO `skills/enchanting.yml` was
+overwritten with max-5 vanilla formulas during the previous test, the user must
+restore the original 45-cap formula (see attached patched configuration).
+
+The `ValhallaTierEnchantingListener` now ONLY checks Valhalla's permanent NG
+perk milestones, family perks, and quality thresholds:
+- NG1: Lesser at Q650
+- NG2: Lesser at Q855
+- NG3: Advanced at Q1090
+- NG4: Advanced at Q1295
+- NG5: Supreme at Q1520
+
+For a qualifying player, it replaces the original vanilla enchant ID with the
+appropriate tier while **preserving the level ValhallaMMO already calculated**.
+No second scaling pass and no cap at V. This permits Sharpness VIII to become
+Lesser Sharpness VIII when the Lesser requirements are met.
+
+Effects are determined by the actual item's level. The Java Edition damage
+formulas are:
+- Sharpness: +0.5 * level + 0.5 attack damage to all targets
+- Smite: +2.5 * level attack damage to undead targets
+- Bane of Arthropods: +2.5 * level attack damage to arthropods and Slowness IV
+
+Levels above V therefore continue increasing enchantment potency. There is no
+independent `supreme_bonus_damage` scaling invented by this plugin.
+
+**Testing:** a vanilla Sharpness offer already boosted to VIII by ValhallaMMO
+should yield tier Sharpness VIII, not V, on an eligible player. For unqualified
+players, vanilla Sharpness VIII should remain untouched. Ensure the preview
+agrees with the final enchanted item. Minecraft `/enchant` itself generally
+restricts the requested level to the registry's max V; use in-game enchanting
+to test amplification above V.
+
+## Test build limitations
+
+- Java compilation and packaging were checked by GitHub Actions, but
+  Purpur 26.3 runtime must still be tested.
+- Some event-based effects are not exact replacements for vanilla built-in
+  enchantment data components in all interaction types. Test direct melee,
+  sweeping, undead, and arthropod damage separately.
+- Native tier selection applies to the enchanting-table event; manual item
+  spawning or other plugins' enchant paths may not run perk checks.
 
 ## Native ValhallaMMO scaling and original effects
 
