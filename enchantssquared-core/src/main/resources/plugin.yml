@@ -11,8 +11,16 @@ commands:
   enchantssquared:
     description: base command for Enchants Squared command
     aliases: [es]
+  nativeenchants:
+    description: Generate YAML-defined native registry enchantments and datapack
+    aliases: [esnative]
+    usage: /esnative generate
+    permission: es.native.generate
 
 permissions:
+  es.native.generate:
+    default: op
+    description: Allows regeneration of the native enchantment datapack
   es.reload:
     default: op
     description: Permission to reload plugin
