@@ -98,60 +98,49 @@ public final class NativeAttributeEnchantEngine implements Runnable {
     public void refresh(Player player) {
         Map<String, Double> values = new HashMap<>();
         for (Definition def : definitions) {
-            for (var entry : def.bases().entrySet()) {
-                String attrName = entry.getKey();
-                if (attrName.equals("AIR_DRAG") || attrName.startsWith("VALHALLA:")) continue;
-                Attribute attr = vanillaAttribute(attrName);
+            for (String attributeName : def.bases().keySet()) {
+                if (attributeName.equals("AIR_DRAG") || attributeName.startsWith("VALHALLA:")) continue;
+                Attribute attr = vanillaAttribute(attributeName);
                 if (attr == null) continue;
-                double value = equippedValue(player, def, attrName);
+                double value = equippedValue(player, def, attributeName);
                 if (value != 0 && Double.isFinite(value)) {
-                    values.merge(attrName + "|" + def.operation(), value, Double::sum);
+                    values.merge(attributeName + "|" + def.operation(), value, Double::sum);
                 }
             }
         }
-        // Track all known modifiers, including ones no longer present on gear.
+        // Keep the same transient modifier when the value hasn't changed.
+        // Re-applying every second would reset health/speed calculations for
+        // no reason. Refresh only when players change enchanted equipment.
+        trackedModifiers.addAll(values.keySet());
         for (String id : new HashSet<>(trackedModifiers)) {
             int pipe = id.lastIndexOf('|');
             if (pipe < 0) continue;
             String attributeId = id.substring(0, pipe);
-            String operation = id.substring(pipe + 1);
+            String operationName = id.substring(pipe + 1);
             Attribute attribute = vanillaAttribute(attributeId);
             if (attribute == null) continue;
             AttributeInstance instance = player.getAttribute(attribute);
             if (instance == null) continue;
-            NamespacedKey key = modifierKey(attributeId, operation);
-            for (AttributeModifier existing : new ArrayList<>(instance.getModifiers())) {
-                if (existing.getKey().equals(key)) instance.removeModifier(existing);
+            NamespacedKey key = modifierKey(attributeId, operationName);
+            AttributeModifier existing = null;
+            for (AttributeModifier modifier : instance.getModifiers()) {
+                if (modifier.getKey().equals(key)) {
+                    existing = modifier;
+                    break;
+                }
             }
-            double amount = values.getOrDefault(id, 0.0);
-            if (!Double.isFinite(amount) || amount == 0) continue;
-            // Limit absurd config values to prevent invalid vanilla attributes.
-            amount = Math.max(-1024, Math.min(1024, amount));
+            double amount = Math.max(-1024, Math.min(1024, values.getOrDefault(id, 0.0)));
+            if (!Double.isFinite(amount)) amount = 0;
+            if (existing != null && existing.getAmount() == amount) continue;
+            if (existing != null) instance.removeModifier(existing);
+            if (amount == 0) continue;
             AttributeModifier.Operation op;
-            try { op = AttributeModifier.Operation.valueOf(operation); }
-            catch (IllegalArgumentException ex) { op = AttributeModifier.Operation.ADD_NUMBER; }
+            try { op = AttributeModifier.Operation.valueOf(operationName); }
+            catch (IllegalArgumentException ex) {
+                EnchantsSquared.logWarning("Invalid native attribute operation: " + operationName);
+                continue;
+            }
             instance.addTransientModifier(new AttributeModifier(key, amount, op, EquipmentSlotGroup.ANY));
-        }
-        for (String id : values.keySet()) trackedModifiers.add(id);
-        // Apply new keys on the same tick, not only on the next refresh.
-        if (!trackedModifiers.containsAll(values.keySet())) return;
-        for (var entry : values.entrySet()) {
-            if (entry.getValue() == 0) continue;
-            String id = entry.getKey();
-            int pipe = id.lastIndexOf('|');
-            if (pipe < 0) continue;
-            Attribute attribute = vanillaAttribute(id.substring(0, pipe));
-            if (attribute == null) continue;
-            AttributeInstance instance = player.getAttribute(attribute);
-            if (instance == null) continue;
-            NamespacedKey key = modifierKey(id.substring(0, pipe), id.substring(pipe + 1));
-            boolean present = instance.getModifiers().stream().anyMatch(x -> x.getKey().equals(key));
-            if (present) continue;
-            AttributeModifier.Operation op;
-            try { op = AttributeModifier.Operation.valueOf(id.substring(pipe + 1)); }
-            catch (IllegalArgumentException ex) { op = AttributeModifier.Operation.ADD_NUMBER; }
-            instance.addTransientModifier(new AttributeModifier(key,
-                    Math.max(-1024, Math.min(1024, entry.getValue())), op, EquipmentSlotGroup.ANY));
         }
     }
 
