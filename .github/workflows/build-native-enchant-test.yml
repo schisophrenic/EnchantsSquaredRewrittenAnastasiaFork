@@ -53,12 +53,14 @@ jobs:
           ls -lh enchantssquared-dist/target/*.jar
           test -s enchantssquared-dist/target/EnchantsSquared_2.7.jar
           jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'plugin.yml'
-          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeYamlRegistryGenerator.class'
-          cp enchantssquared-dist/target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_NativeEnchant_NG_Test.jar
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'paper-plugin.yml'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantmentBootstrap.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'ValhallaTierEnchantingListener.class'
+          cp enchantssquared-dist/target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_JavaRegistry_NG_Test.jar
       - name: Upload downloadable test plugin
         uses: actions/upload-artifact@v4
         with:
-          name: EnchantsSquared-NativeEnchant-NG-Test
+          name: EnchantsSquared-JavaRegistry-NG-Test
           path: dist-test/EnchantsSquared_NativeEnchant_NG_Test.jar
           if-no-files-found: error
           retention-days: 14
