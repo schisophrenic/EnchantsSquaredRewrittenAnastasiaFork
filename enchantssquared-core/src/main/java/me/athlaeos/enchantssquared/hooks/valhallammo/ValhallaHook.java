@@ -29,17 +29,20 @@ public class ValhallaHook {
                     for (String stat : statSection.getKeys(false)){
                         double base = valhallaConfig.getDouble("enchantments." + key + ".stats." + stat + ".base");
                         double lv = valhallaConfig.getDouble("enchantments." + key + ".stats." + stat + ".lv");
-                        StatCollector collector = AccumulativeStatManager.getSources().get(stat);
+                        // Backward compatibility for older config_valhallammo.yml files.
+                        // ValhallaMMO calls this stat BREWING_SPEED_BONUS.
+                        String valhallaStat = "ALCHEMY_BREW_SPEED".equals(stat) ? "BREWING_SPEED_BONUS" : stat;
+                        StatCollector collector = AccumulativeStatManager.getSources().get(valhallaStat);
                         if (collector != null){
                             if (collector.getStatSources().stream()
                                     .anyMatch(source -> source instanceof EvEAccumulativeStatSource)){
                                 if (collector.isAttackerPossessive()){
-                                    AccumulativeStatManager.register(stat, new OffensiveEnchantmentStatSource(newEnchantment, base, lv));
+                                    AccumulativeStatManager.register(valhallaStat, new OffensiveEnchantmentStatSource(newEnchantment, base, lv));
                                 } else {
-                                    AccumulativeStatManager.register(stat, new DefensiveEnchantmentStatSource(newEnchantment, base, lv));
+                                    AccumulativeStatManager.register(valhallaStat, new DefensiveEnchantmentStatSource(newEnchantment, base, lv));
                                 }
                             } else {
-                                AccumulativeStatManager.register(stat, new EnchantmentStatSource(newEnchantment, base, lv));
+                                AccumulativeStatManager.register(valhallaStat, new EnchantmentStatSource(newEnchantment, base, lv));
                             }
                         }
                     }
