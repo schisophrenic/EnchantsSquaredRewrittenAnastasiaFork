@@ -13,6 +13,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.LinkedHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import java.util.Map;
 
 /**
@@ -41,6 +45,20 @@ public final class NativeYamlEffectListener implements Listener {
         registerHandler("melee_multiplier", (event, level, def) -> {
             double bonus = value(def, level);
             event.setDamage(Math.max(0, event.getDamage() * (1 + bonus)));
+        });
+        registerHandler("on_hit_potion", (event, level, def) -> {
+            if (!(event.getEntity() instanceof LivingEntity victim)) return;
+            double chance = Math.max(0, Math.min(1, def.getDouble("chance", 0)));
+            if (ThreadLocalRandom.current().nextDouble() >= chance) return;
+            for (Map<?, ?> entry : def.getMapList("effects")) {
+                Object type = entry.get("type");
+                if (type == null) continue;
+                PotionEffectType potion = PotionEffectType.getByName(type.toString());
+                if (potion == null) continue;
+                int duration = number(entry.get("duration_ticks"), 60);
+                int amplifier = number(entry.get("amplifier"), 0);
+                if (duration > 0) victim.addPotionEffect(new PotionEffect(potion, duration, Math.max(0, amplifier)));
+            }
         });
 
         ConfigurationSection enchantments = configuration.getConfigurationSection("enchantments");
@@ -75,6 +93,11 @@ public final class NativeYamlEffectListener implements Listener {
             NativeEffectHandler handler = handlers.get(effect.handler());
             if (handler != null) handler.apply(event, level, effect.definition());
         }
+    }
+
+    private static int number(Object number, int fallback) {
+        if (number instanceof Number n) return n.intValue();
+        return fallback;
     }
 
     private static double value(ConfigurationSection definition, int level) {
