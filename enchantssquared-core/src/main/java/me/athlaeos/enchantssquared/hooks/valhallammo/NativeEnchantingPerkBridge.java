@@ -25,6 +25,12 @@ public final class NativeEnchantingPerkBridge implements Listener {
         for (Map.Entry<Enchantment, Integer> entry : event.getEnchantsToAdd().entrySet()){
             NamespacedKey key = entry.getKey().getKey();
             if (!key.getNamespace().equals("enchantssquared")) continue;
+            // The tier substitutions inherit the complete Valhalla-amplified
+            // vanilla roll and its specific/generic perk bonuses already.
+            // Adding those perks a second time here would double-amplify tiers.
+            if (key.getKey().matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")) {
+                continue;
+            }
             int bonus = 0;
             String source = config.getString("replacements." + key.getKey());
             if (source != null && !source.isBlank()){
