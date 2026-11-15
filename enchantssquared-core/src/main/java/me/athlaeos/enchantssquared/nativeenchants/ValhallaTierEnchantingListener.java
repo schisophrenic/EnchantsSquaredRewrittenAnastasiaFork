@@ -153,7 +153,10 @@ public final class ValhallaTierEnchantingListener implements Listener {
                     offer.setEnchantmentLevel(replacement.level());
                 } else {
                     Enchantment base = Registry.ENCHANTMENT.get(family.base());
-                    if (base != null) offer.setEnchantment(base);
+                    if (base != null) {
+                        offer.setEnchantment(base);
+                        offer.setEnchantmentLevel(Math.min(5, offer.getEnchantmentLevel()));
+                    }
                 }
                 break;
             }
@@ -184,6 +187,9 @@ public final class ValhallaTierEnchantingListener implements Listener {
             // as ValhallaMMO calculated it, including its custom level bonus.
             if (chosen == null && rolls.containsKey(base)) {
                 removeTierAlternatives(rolls, family);
+                // ValhallaMMO adds its perk bonuses after applying the
+                // scaling's configured upper bound. Enforce vanilla V here.
+                rolls.put(base, Math.min(5, rolls.get(base)));
                 continue;
             }
 
@@ -195,7 +201,7 @@ public final class ValhallaTierEnchantingListener implements Listener {
             rolls.remove(base);
             removeTierAlternatives(rolls, family);
             if (chosen == null) {
-                rolls.put(base, previousLevel);
+                rolls.put(base, Math.min(5, previousLevel));
             } else {
                 rolls.put(chosen.enchantment(), chosen.level());
             }
