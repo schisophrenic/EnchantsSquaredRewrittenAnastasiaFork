@@ -9,22 +9,24 @@
 # The tier selector passes normalized quality to getScaledLevel:
 #   normalized_rating = (effective_quality - band_start_quality) * 100 / quality_per_level
 # This keeps the approved 650/855/1090/1295/1520 quality gates authoritative.
-# The existing level bonuses (e.g. enchanting_levelbonussharpness_add and
-# enchanting_levelbonusgenericoffensive_add) are inherited from the related
-# vanilla enchantment and translated by a conservative factor below.
+# Native tier levels are I–V, exactly like their vanilla family.
+# Existing family-specific and generic offensive perks improve enchanting
+# quality by 5 points per earned perk-bonus level (configurable); they cannot
+# bypass NG gates or produce a custom tier level VI.
+# The registry and the NG tier listener independently enforce max level V.
 #
 native_scalings_enabled: true
-tier_perk_level_multiplier: 0.2
+tier_perk_quality_per_bonus: 5.0
 native_scalings:
-  lesser_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  lesser_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  lesser_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  advanced_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  advanced_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  advanced_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  supreme_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  supreme_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
-  supreme_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  lesser_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  lesser_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  lesser_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  advanced_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  advanced_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  advanced_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  supreme_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  supreme_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+  supreme_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,5
 
 # Optional translation of ValhallaMMO enchanting perk bonuses to real custom enchantments
 enabled: true
