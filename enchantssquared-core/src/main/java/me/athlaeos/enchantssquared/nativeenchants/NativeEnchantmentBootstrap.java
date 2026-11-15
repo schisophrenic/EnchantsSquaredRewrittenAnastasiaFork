@@ -81,11 +81,10 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
                     List.copyOf(section.getStringList("exclusive_set")),
                     List.copyOf(section.getStringList("slots")),
                     Math.max(1, Math.min(1024, section.getInt("weight", 10))),
-                    // Force the nine offensive tier families to the same
-                    // native ceiling as vanilla Sharpness/Smite/Bane: V.
-                    // Overrides max_level: 30/50 in already-installed YAML.
-                    name.matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")
-                            ? 5 : Math.max(1, Math.min(255, section.getInt("max_level", 1))),
+                    // Retain the vanilla maximum (V/II/I/IV) for each native
+                    // family. This is only the normal registry limit; ValhallaMMO
+                    // can amplify the level of enchanted items above this.
+                    vanillaMaximum(name, section.getInt("max_level", 1)),
                     Math.max(1, section.getInt("min_cost_base", 5)),
                     Math.max(0, section.getInt("min_cost_per_level", 10)),
                     Math.max(1, section.getInt("max_cost_base", 50)),
@@ -170,6 +169,18 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
         return RegistrySet.keySet(RegistryKey.ITEM, keys);
     }
 
+    private static int vanillaMaximum(String id, int configured) {
+        String name = id.replaceFirst("^(lesser|advanced|supreme)_", "");
+        return switch (name) {
+            case "sharpness", "smite", "bane_of_arthropods", "power" -> 5;
+            case "punch", "fire_aspect" -> 2;
+            case "flame" -> 1;
+            case "protection", "fire_protection", "blast_protection",
+                    "projectile_protection", "magic_protection" -> 4;
+            default -> Math.max(1, Math.min(255, configured));
+        };
+    }
+
     private static YamlConfiguration loadConfig(BootstrapContext context) {
         Path destination = context.getDataDirectory().resolve("config_native_enchants.yml");
         try {
@@ -184,6 +195,36 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
         } catch (Exception ex) {
             throw new IllegalStateException("Could not load native enchant configuration: " + destination, ex);
         }
-        return YamlConfiguration.loadConfiguration(destination.toFile());
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(destination.toFile());
+        // A Paper registry cannot be patched after plugin enable. Merge
+        // newly-added bundled enchantments HERE, before the registry is
+        // constructed. Preserve existing user values; add only missing keys.
+        // This also upgrades servers using the previous 10-enchant test JAR.
+        try (InputStream in = NativeEnchantmentBootstrap.class.getClassLoader()
+                .getResourceAsStream("config_native_enchants.yml")) {
+            if (in == null) throw new IllegalStateException("Bundled native config missing");
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
+                    new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
+            int newKeys = 0;
+            for (String root : List.of("enchantments", "tier_families", "perk_groups", "settings")) {
+                ConfigurationSection bundled = defaults.getConfigurationSection(root);
+                if (bundled == null) continue;
+                for (var entry : bundled.getValues(true).entrySet()) {
+                    if (entry.getValue() instanceof ConfigurationSection) continue;
+                    String key = root + "." + entry.getKey();
+                    if (config.contains(key)) continue;
+                    config.set(key, entry.getValue());
+                    newKeys++;
+                }
+            }
+            if (newKeys > 0) {
+                config.save(destination.toFile());
+                context.getLogger().info("Merged {} missing native enchant config keys from bundled defaults "
+                        + "(existing values preserved).", newKeys);
+            }
+        } catch (Exception ex) {
+            throw new IllegalStateException("Could not merge native enchant YAML defaults: " + destination, ex);
+        }
+        return config;
     }
 }
