@@ -25,7 +25,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 10
-    max_level: 30
+    max_level: 50
     min_cost_base: 5
     min_cost_per_level: 8
     max_cost_base: 30
@@ -50,7 +50,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 5
-    max_level: 30
+    max_level: 50
     min_cost_base: 15
     min_cost_per_level: 8
     max_cost_base: 40
@@ -74,7 +74,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 1
-    max_level: 10
+    max_level: 50
     min_cost_base: 25
     min_cost_per_level: 8
     max_cost_base: 60
@@ -98,7 +98,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 8
-    max_level: 30
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -122,7 +122,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 4
-    max_level: 30
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -146,7 +146,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 1
-    max_level: 10
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -170,7 +170,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 8
-    max_level: 30
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -194,7 +194,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 4
-    max_level: 30
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -218,7 +218,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 1
-    max_level: 10
+    max_level: 50
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -275,6 +275,9 @@ enchantments:
 # The quality windows below are tuned to the uploaded progression's no-external-buff
 # benchmark Q~753 at NG1 lv125; 985 NG2 lv150; 1190 NG3 lv175; 1410 NG4 lv200;
 # and 1785 NG5 lv200, assuming the main and NG quality perks are purchased.
+# Native registry max_level=50 is the command/manual maximum; the enchanting
+# table's NG restrictions below still cap Lesser at 10/30, Advanced at 10/30,
+# and Supreme at 10. Admin /enchant bypasses per-player enchanting-table gates.
 # All tier quality gates are intentionally 100 ABOVE the previous calibration:
 # unlocking a new NG is not sufficient to reach that tier's maximum level.
 # NG1: 650..830, NG2: 855..1083, NG3: 1090..1288,
