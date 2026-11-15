@@ -7,8 +7,10 @@
 # are PLAYER-SPECIFIC, based on their ValhallaMMO perks and enchanting quality.
 #
 # Java effect handlers (implemented by the plugin):
-#   melee_flat_bonus: adds a flat amount to the attack damage event
-#   melee_multiplier: multiplies attack damage by (1 + configured amount)
+#   vanilla_sharpness: Java damage +0.5 * (level + 1) on melee hit
+#   vanilla_smite: Java damage +2.5 * level ONLY vs undead
+#   vanilla_bane_of_arthropods: +2.5 * level vs arthropods + Slowness IV
+#   on_hit_potion: special effect with configured potion and chance
 #   none: registry-only until you implement a Java handler
 #
 # More event handlers can be added without changing how enchantments are registered.
@@ -25,7 +27,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 10
-    max_level: 50
+    max_level: 5
     min_cost_base: 5
     min_cost_per_level: 8
     max_cost_base: 30
@@ -39,9 +41,7 @@ enchantments:
       - enchantssquared:advanced_sharpness
       - enchantssquared:supreme_sharpness
     effect:
-      handler: melee_flat_bonus
-      base: 0.5
-      per_level: 0.15
+      handler: vanilla_sharpness
 
   advanced_sharpness:
     enabled: true
@@ -50,7 +50,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 5
-    max_level: 50
+    max_level: 5
     min_cost_base: 15
     min_cost_per_level: 8
     max_cost_base: 40
@@ -63,9 +63,7 @@ enchantments:
       - enchantssquared:lesser_sharpness
       - enchantssquared:supreme_sharpness
     effect:
-      handler: melee_flat_bonus
-      base: 3
-      per_level: 0.35
+      handler: vanilla_sharpness
 
   supreme_sharpness:
     enabled: true
@@ -74,7 +72,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 1
-    max_level: 50
+    max_level: 5
     min_cost_base: 25
     min_cost_per_level: 8
     max_cost_base: 60
@@ -87,9 +85,7 @@ enchantments:
       - enchantssquared:lesser_sharpness
       - enchantssquared:advanced_sharpness
     effect:
-      handler: melee_flat_bonus
-      base: 15
-      per_level: 1
+      handler: vanilla_sharpness
 
 
   lesser_smite:
@@ -98,7 +94,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 8
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -112,9 +108,7 @@ enchantments:
       - enchantssquared:advanced_smite
       - enchantssquared:supreme_smite
     effect:
-      handler: melee_flat_bonus
-      base: 0.5
-      per_level: 0.15
+      handler: vanilla_smite
 
   advanced_smite:
     enabled: true
@@ -122,7 +116,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 4
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -136,9 +130,7 @@ enchantments:
       - enchantssquared:advanced_smite
       - enchantssquared:supreme_smite
     effect:
-      handler: melee_flat_bonus
-      base: 3
-      per_level: 0.35
+      handler: vanilla_smite
 
   supreme_smite:
     enabled: true
@@ -146,7 +138,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 1
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -160,9 +152,7 @@ enchantments:
       - enchantssquared:advanced_smite
       - enchantssquared:supreme_smite
     effect:
-      handler: melee_flat_bonus
-      base: 15
-      per_level: 1
+      handler: vanilla_smite
 
   lesser_bane_of_arthropods:
     enabled: true
@@ -170,7 +160,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 8
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -184,9 +174,7 @@ enchantments:
       - enchantssquared:advanced_bane_of_arthropods
       - enchantssquared:supreme_bane_of_arthropods
     effect:
-      handler: melee_flat_bonus
-      base: 0.5
-      per_level: 0.15
+      handler: vanilla_bane_of_arthropods
 
   advanced_bane_of_arthropods:
     enabled: true
@@ -194,7 +182,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 4
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -208,9 +196,7 @@ enchantments:
       - enchantssquared:advanced_bane_of_arthropods
       - enchantssquared:supreme_bane_of_arthropods
     effect:
-      handler: melee_flat_bonus
-      base: 3
-      per_level: 0.35
+      handler: vanilla_bane_of_arthropods
 
   supreme_bane_of_arthropods:
     enabled: true
@@ -218,7 +204,7 @@ enchantments:
     supported_items: ["#minecraft:enchantable/weapon"]
     slots: [mainhand]
     weight: 1
-    max_level: 50
+    max_level: 5
     min_cost_base: 10
     min_cost_per_level: 5
     max_cost_base: 45
@@ -232,9 +218,7 @@ enchantments:
       - enchantssquared:advanced_bane_of_arthropods
       - enchantssquared:supreme_bane_of_arthropods
     effect:
-      handler: melee_flat_bonus
-      base: 15
-      per_level: 1
+      handler: vanilla_bane_of_arthropods
 
   # Example special effect from the supplied So Many Enchantments mod.
   # Approximate starter effect; tune chances/durations to suit server balance.
@@ -275,13 +259,15 @@ enchantments:
 # The quality windows below are tuned to the uploaded progression's no-external-buff
 # benchmark Q~753 at NG1 lv125; 985 NG2 lv150; 1190 NG3 lv175; 1410 NG4 lv200;
 # and 1785 NG5 lv200, assuming the main and NG quality perks are purchased.
-# Native registry max_level=50 is the command/manual maximum; the enchanting
-# table's NG restrictions below still cap Lesser at 10/30, Advanced at 10/30,
-# and Supreme at 10. Admin /enchant bypasses per-player enchanting-table gates.
+# Every offensive tier is a real enchantment with max_level: 5.
+# Normal enchanting table still checks NG stage and perks, and the same
+# vanilla-family effect formulas run with their own tier's I-V level.
+# Admin /enchant can award registered tiers directly (bypasses table restrictions).
 # All tier quality gates are intentionally 100 ABOVE the previous calibration:
 # unlocking a new NG is not sufficient to reach that tier's maximum level.
-# NG1: 650..830, NG2: 855..1083, NG3: 1090..1288,
-# NG4: 1295..1504, NG5: 1520..1871.
+# NG1: Lesser I-III 650..830; NG2: Lesser IV-V 855..1083
+# NG3: Advanced I-III 1090..1288; NG4: Advanced IV-V 1295..1504
+# NG5: Supreme I-V 1520..1872. No tier may exceed level V.
 tier_families:
   sharpness:
     base: minecraft:sharpness
@@ -292,33 +278,33 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 20
+            quality_per_level: 90
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 12
-            first_level: 11
-            max_level: 30
+            quality_per_level: 228
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:advanced_sharpness
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 22
+            quality_per_level: 99
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 11
-            first_level: 11
-            max_level: 30
+            quality_per_level: 209
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:supreme_sharpness
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 39
+            quality_per_level: 88
             first_level: 1
-            max_level: 10
+            max_level: 5
   smite:
     base: minecraft:smite
     required_perks:
@@ -328,33 +314,33 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 20
+            quality_per_level: 90
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 12
-            first_level: 11
-            max_level: 30
+            quality_per_level: 228
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:advanced_smite
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 22
+            quality_per_level: 99
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 11
-            first_level: 11
-            max_level: 30
+            quality_per_level: 209
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:supreme_smite
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 39
+            quality_per_level: 88
             first_level: 1
-            max_level: 10
+            max_level: 5
   bane_of_arthropods:
     base: minecraft:bane_of_arthropods
     required_perks:
@@ -364,33 +350,33 @@ tier_families:
         progression:
           - required_ng: 1
             quality_at_first_level: 650
-            quality_per_level: 20
+            quality_per_level: 90
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 2
             quality_at_first_level: 855
-            quality_per_level: 12
-            first_level: 11
-            max_level: 30
+            quality_per_level: 228
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:advanced_bane_of_arthropods
         progression:
           - required_ng: 3
             quality_at_first_level: 1090
-            quality_per_level: 22
+            quality_per_level: 99
             first_level: 1
-            max_level: 10
+            max_level: 3
           - required_ng: 4
             quality_at_first_level: 1295
-            quality_per_level: 11
-            first_level: 11
-            max_level: 30
+            quality_per_level: 209
+            first_level: 4
+            max_level: 5
       - enchantment: enchantssquared:supreme_bane_of_arthropods
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
-            quality_per_level: 39
+            quality_per_level: 88
             first_level: 1
-            max_level: 10
+            max_level: 5
 
 # Existing ValhallaMMO enchanting perks approved for categories.
 # These IDs come from enchanting_progression.yml; no changes to the
