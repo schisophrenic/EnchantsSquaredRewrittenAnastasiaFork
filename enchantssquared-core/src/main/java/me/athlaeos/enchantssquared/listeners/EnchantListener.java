@@ -25,8 +25,9 @@ public class EnchantListener implements Listener {
     @EventHandler
     public void onEnchant(EnchantItemEvent e){
         if (e.isCancelled()) return;
-        // Registered native enchantments already roll at the enchanting table.
-        if (CustomEnchantManager.getInstance().hasNativeRegistryEnchantments()) return;
+        // Preserve EnchantsSquared's existing PDC-based enchants.
+        // Native YAML tiers are separate entries and are gated by the
+        // Valhalla listener, not replacements for the legacy enchant pool.
         Player p = e.getEnchanter();
         if (!PlayerOptionsManager.getManager().doesPlayerWantEnchants(p)) return;
         if (e.getExpLevelCost() >= level_minimum){
