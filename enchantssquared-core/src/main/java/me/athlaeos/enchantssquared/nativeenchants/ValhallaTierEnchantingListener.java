@@ -44,6 +44,9 @@ public final class ValhallaTierEnchantingListener implements Listener {
         ConfigurationSection sections = config.getConfigurationSection("tier_families");
         if (sections != null) for (String name : sections.getKeys(false)) {
             String prefix = "tier_families." + name;
+            // Family switches ONLY disable tier substitutions; normal vanilla
+            // ValhallaMMO enchanting scaling remains completely unchanged.
+            if (!config.getBoolean(prefix + ".enabled", true)) continue;
             NamespacedKey base = parse(config.getString(prefix + ".base"));
             if (base == null) {
                 EnchantsSquared.logWarning("Invalid base for native enchanting family " + name);
