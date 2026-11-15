@@ -5,7 +5,9 @@ import me.athlaeos.valhallammo.item.ItemBuilder;
 import me.athlaeos.valhallammo.item.ItemAttributesRegistry;
 import me.athlaeos.valhallammo.item.SmithingItemPropertyManager;
 import me.athlaeos.valhallammo.item.item_attributes.AttributeWrapper;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -49,6 +51,17 @@ public final class NativeLowQualityEquipmentLoot {
             SmithingItemPropertyManager.setNeutralQuality(builder, neutral);
             SmithingItemPropertyManager.setQuality(builder, actual);
 
+            // Let ValhallaEquipment generate its OWN class, properties,
+            // names, and model appearance. The item quality is already set
+            // to the low-quality found-gear value above, and this path
+            // deliberately bypasses the player's crafting perk requirement.
+            if (loot.getBoolean("use_valhalla_equipment", true)) {
+                ItemStack equipmentRoll = useValhallaEquipment(builder.get());
+                if (equipmentRoll != null) return equipmentRoll;
+            }
+
+            // Compatibility fallback for installations without the Equipment
+            // plugin, or without its optional natural-loot API.
             List<String> attributes = loot.getStringList("attribute_pool");
             int count = Math.max(0, Math.min(4, loot.getInt("max_random_attributes", 2)));
             double minRoll = loot.getDouble("attribute_min", 0.01);
@@ -67,6 +80,27 @@ public final class NativeLowQualityEquipmentLoot {
             EnchantsSquared.logWarning("Could not build low-quality Valhalla loot: " + err.getMessage());
             return item;
         }
+    }
+
+    private static ItemStack useValhallaEquipment(ItemStack prepared) {
+        Plugin equipment = Bukkit.getPluginManager().getPlugin("ValhallaEquipment");
+        if (equipment == null || !equipment.isEnabled()) return null;
+        try {
+            // Soft dependency: supports older Equipment builds without
+            // linking their classes into EnchantsSquared's classloader.
+            Object generated = equipment.getClass()
+                    .getMethod("generateNaturalLoot", Object.class)
+                    .invoke(equipment, prepared);
+            if (generated instanceof ItemStack result && !result.getType().isAir()) {
+                return result;
+            }
+        } catch (ReflectiveOperationException | LinkageError unavailable) {
+            // A mismatched or older Equipment build should NOT break
+            // natural loot generation; use native ValhallaMMO fallback.
+            EnchantsSquared.logWarning("ValhallaEquipment natural-loot bridge unavailable: "
+                    + unavailable.getClass().getSimpleName() + ": " + unavailable.getMessage());
+        }
+        return null;
     }
 
     private static int neutralQuality(Material material) {
