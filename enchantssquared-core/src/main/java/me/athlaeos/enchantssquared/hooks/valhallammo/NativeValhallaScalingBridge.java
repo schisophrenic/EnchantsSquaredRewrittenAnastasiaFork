@@ -84,11 +84,16 @@ public final class NativeValhallaScalingBridge {
             String formula = externalFormula != null && !externalFormula.isBlank()
                     ? externalFormula : pluginFormula;
             if (formula == null || formula.isBlank()) {
-                formula = "(1/100) * %rating%,ADD_ON_DEFAULT,0,50";
+                formula = "(1/100) * %rating%,ADD_ON_DEFAULT,0,5";
             }
             try {
                 Scaling scaling = Scaling.fromString(formula, null);
-                EnchantingItemPropertyManager.registerScaling(enchantment, scaling);
+                // Force the Valhalla scaling expression's upper bound to V,
+                // including legacy server configs that still specify 50.
+                Scaling limited = new Scaling(scaling.getExpression(), scaling.getScalingType(),
+                        scaling.getLowerBound() == null ? null : Math.min(5.0, scaling.getLowerBound()),
+                        5.0);
+                EnchantingItemPropertyManager.registerScaling(enchantment, limited);
                 count++;
             } catch (RuntimeException ex) {
                 EnchantsSquared.logWarning("Invalid native ValhallaMMO scaling " + key + ": " + ex.getMessage());
