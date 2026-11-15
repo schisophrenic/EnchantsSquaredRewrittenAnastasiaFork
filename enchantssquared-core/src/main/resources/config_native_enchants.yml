@@ -30,10 +30,17 @@ blocked_base_enchants: [damage_reduction]
 
 # Naturally dropped armor/tools/utility loot: no Smithing skill required.
 # Uses ValhallaMMO's real SmithingItemPropertyManager quality and attribute
-# APIs (NOT an invented lore tag). It does not call ValhallaEquipment's
-# crafting-only class/model randomizer. Test separately with that plugin.
+# APIs (NOT an invented lore tag). When ValhallaEquipment is installed with
+# its natural-loot API, it rolls its OWN classes, properties, names and models
+# on the low-quality base. Old/missing Equipment plugin -> fallback roll.
 loot_equipment:
   enabled: true
+  # Use ValhallaEquipment's own item-class/attribute/model generator when
+  # installed. If missing, fall back to native ValhallaMMO attributes.
+  use_valhalla_equipment: true
+  # After equipment generation, optionally add a compatible native enchant.
+  # The enchant's own acquisition.<source> chance must also succeed.
+  native_enchant_chance: 0.20
   quality_fraction_min: 0.55  # 55% of the material neutral quality
   quality_fraction_max: 0.80  # 80% of neutral; deliberately LOW quality
   item_pool:
