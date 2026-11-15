@@ -9,6 +9,9 @@ import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
+import me.athlaeos.enchantssquared.nativeenchants.NativeYamlRegistryGenerator;
+import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
 import me.athlaeos.enchantssquared.managers.AnimationRegistry;
@@ -65,6 +68,7 @@ public final class EnchantsSquared extends JavaPlugin {
         super.onLoad();
 
         saveConfig("config.yml");
+        saveConfig("config_native_enchants.yml");
 
         mcMMOHooked = hasPlugin("mcMMO");
         valhallaHooked = hasPlugin("ValhallaMMO");
@@ -144,7 +148,16 @@ public final class EnchantsSquared extends JavaPlugin {
         RegularIntervalEnchantmentClockManager.startClock();
         if (valhallaHooked) {
             ValhallaHook.registerValhallaEnchantments();
+            // Existing vanilla perks/quality calculations run before tier substitution.
             registerListener(new NativeEnchantingPerkBridge());
+        }
+        NativeYamlRegistryGenerator nativeRegistry = new NativeYamlRegistryGenerator(this);
+        nativeRegistry.generate();
+        registerListener(new NativeYamlEffectListener(nativeRegistry.config()));
+        if (valhallaHooked) {
+            // Register AFTER the native perk bridge: the enhanced vanilla level is
+            // carried into the highest eligible YAML tier without double boosting.
+            registerListener(new ValhallaTierEnchantingListener(nativeRegistry.config()));
         }
     }
 
