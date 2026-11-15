@@ -1,0 +1,51 @@
+name: EnchantsSquared
+version: '${revision}'
+main: me.athlaeos.enchantssquared.EnchantsSquared
+api-version: '26.3'
+bootstrapper: me.athlaeos.enchantssquared.nativeenchants.NativeEnchantmentBootstrap
+description: "EnchantsSquared with native Java registry enchantments and ValhallaMMO tier progression"
+authors: [Athlaeos, Prototer]
+website: "https://discord.gg/dUwtmYV"
+dependencies:
+  server:
+    ValhallaMMO:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    ValhallaTrinkets:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    WorldGuard:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    mcMMO:
+      load: BEFORE
+      required: false
+      join-classpath: true
+    Jobs:
+      load: BEFORE
+      required: false
+      join-classpath: true
+permissions:
+  es.reload:
+    default: op
+  es.help:
+    default: true
+  es.nocooldowns:
+    default: op
+  es.list:
+    default: true
+  es.menu:
+    default: true
+  es.noregionrestrictions:
+    default: op
+  es.enchant:
+    default: op
+  es.enchant.insertenchantmenthere:
+    default: op
+  es.debug:
+    default: op
+  es.native.generate:
+    default: op
