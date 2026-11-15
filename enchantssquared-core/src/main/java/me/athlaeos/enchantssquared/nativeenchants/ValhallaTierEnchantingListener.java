@@ -1,6 +1,10 @@
 package me.athlaeos.enchantssquared.nativeenchants;
 
 import me.athlaeos.enchantssquared.EnchantsSquared;
+import me.athlaeos.enchantssquared.config.ConfigManager;
+import me.athlaeos.valhallammo.item.EnchantingItemPropertyManager;
+import me.athlaeos.valhallammo.item.EnchantmentClassification;
+import me.athlaeos.valhallammo.playerstats.profiles.implementations.EnchantingProfile;
 import me.athlaeos.valhallammo.playerstats.AccumulativeStatManager;
 import me.athlaeos.valhallammo.playerstats.profiles.ProfileCache;
 import me.athlaeos.valhallammo.playerstats.profiles.implementations.PowerProfile;
@@ -39,9 +43,16 @@ public final class ValhallaTierEnchantingListener implements Listener {
     private final Map<NamespacedKey, Family> families = new LinkedHashMap<>();
     private final List<Bonus> bonusEnchants = new ArrayList<>();
     private final int maximumBonusEnchants;
+    private final double tierPerkMultiplier;
+    private final boolean nativeScalingsEnabled;
 
     public ValhallaTierEnchantingListener(YamlConfiguration config) {
         maximumBonusEnchants = Math.max(0, Math.min(10, config.getInt("settings.maximum_bonus_enchantments", 1)));
+        YamlConfiguration valhallaBridge = ConfigManager.getInstance()
+                .getConfig("config_native_enchanting.yml").get();
+        tierPerkMultiplier = Math.max(0.0, Math.min(1.0,
+                valhallaBridge.getDouble("tier_perk_level_multiplier", 0.2)));
+        nativeScalingsEnabled = valhallaBridge.getBoolean("native_scalings_enabled", true);
         ConfigurationSection sections = config.getConfigurationSection("tier_families");
         if (sections != null) for (String name : sections.getKeys(false)) {
             String prefix = "tier_families." + name;
@@ -110,12 +121,13 @@ public final class ValhallaTierEnchantingListener implements Listener {
         int quality = enchantingQuality(player);
         Set<String> perks = unlockedPerks(player);
         int ng = ngLevel(perks);
+        EnchantingProfile enchantingProfile = ProfileCache.getOrCache(player, EnchantingProfile.class);
 
         for (EnchantmentOffer offer : event.getOffers()) {
             if (offer == null) continue;
             for (Family family : families.values()) {
                 if (!matchesFamily(offer.getEnchantment(), family)) continue;
-                Choice replacement = choose(family, quality, ng, perks);
+                Choice replacement = choose(family, quality, ng, perks, enchantingProfile);
                 if (replacement != null) {
                     offer.setEnchantment(replacement.enchantment());
                     offer.setEnchantmentLevel(replacement.level());
@@ -134,6 +146,7 @@ public final class ValhallaTierEnchantingListener implements Listener {
         int quality = enchantingQuality(player);
         Set<String> perks = unlockedPerks(player);
         int ng = ngLevel(perks);
+        EnchantingProfile enchantingProfile = ProfileCache.getOrCache(player, EnchantingProfile.class);
         Map<Enchantment, Integer> rolls = event.getEnchantsToAdd();
 
         for (Family family : families.values()) {
@@ -146,7 +159,7 @@ public final class ValhallaTierEnchantingListener implements Listener {
             }
             if (!exists) continue;
 
-            Choice chosen = choose(family, quality, ng, perks);
+            Choice chosen = choose(family, quality, ng, perks, enchantingProfile);
             // If no tier is unlocked, retain the vanilla enchantment exactly
             // as ValhallaMMO calculated it, including its custom level bonus.
             if (chosen == null && rolls.containsKey(base)) {
@@ -188,15 +201,42 @@ public final class ValhallaTierEnchantingListener implements Listener {
         }
     }
 
-    private static Choice choose(Family family, int quality, int ng, Set<String> perks) {
+    private Choice choose(Family family, int quality, int ng, Set<String> perks,
+                          EnchantingProfile enchantingProfile) {
         if (!perks.containsAll(family.perks())) return null;
         for (Band band : family.bands()) {
             if (ng < band.ng() || quality < band.minimumQuality() || !perks.containsAll(band.perks())) continue;
             Enchantment registered = Registry.ENCHANTMENT.get(band.enchantment());
             if (registered == null) continue;
+
             int bonusLevels = (quality - band.minimumQuality()) / band.qualityStep();
-            int level = Math.min(band.maxLevel(), band.firstLevel() + bonusLevels);
-            return new Choice(registered, Math.max(1, Math.min(level, registered.getMaxLevel())));
+            int level = band.firstLevel() + bonusLevels;
+            // Native Enchantment instances are registered through Paper bootstrap.
+            // Use ValhallaMMO's public scaling registry for their NG-band levels,
+            // preserving the previous approved quality progression by normalizing
+            // rating to 100 units per level before invoking Scaling.evaluate().
+            if (nativeScalingsEnabled && EnchantingItemPropertyManager.getScaling(registered) != null) {
+                int normalized = (int) Math.min(Integer.MAX_VALUE,
+                        ((long) (quality - band.minimumQuality()) * 100L) / band.qualityStep());
+                level = EnchantingItemPropertyManager.getScaledLevel(registered, normalized, band.firstLevel());
+            }
+
+            // ValhallaMMO's EnchantingProfile only maps vanilla keys to specific
+            // bonuses. Inherit both the vanilla family bonus and generic offensive
+            // bonus instead of silently treating custom keys as UNDEFINED.
+            // A configurable partial translation prevents NG5's permanent +10
+            // generic offense from instantly maxing Supreme on unlock.
+            Enchantment vanilla = Registry.ENCHANTMENT.get(family.base());
+            if (vanilla != null && tierPerkMultiplier > 0) {
+                int sourceBonus = enchantingProfile.getEnchantmentBonus(vanilla)
+                        + enchantingProfile.getEnchantmentBonus(EnchantmentClassification.OFFENSIVE);
+                int tierBonus = (int) Math.floor(Math.max(0, sourceBonus) * tierPerkMultiplier);
+                level += tierBonus;
+            }
+
+            // An NG milestone and its required quality remain a strict ceiling.
+            level = Math.max(band.firstLevel(), Math.min(level, band.maxLevel()));
+            return new Choice(registered, Math.min(level, registered.getMaxLevel()));
         }
         return null;
     }
