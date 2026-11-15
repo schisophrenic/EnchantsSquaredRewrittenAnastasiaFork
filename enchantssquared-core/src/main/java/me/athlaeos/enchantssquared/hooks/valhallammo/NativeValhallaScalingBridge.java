@@ -21,14 +21,13 @@ import java.util.Map;
  * Connects Paper's real custom enchantments to ValhallaMMO's public
  * EnchantingItemPropertyManager scaling registry. No ValhallaMMO fork needed.
  *
- * Native formulas use a normalized quality rating within each unlocked NG band:
- *   rating = (actualQuality - ngBandMinQuality) * 100 / ngBandQualityPerLevel
- * A formula like "(1/100) * %rating%,ADD_ON_DEFAULT,0,50" therefore preserves
- * the existing approved NG quality progression while allowing other tuning.
+ * Native tiered enchants are registered with the same ValhallaMMO
+ * scaling expressions as their vanilla families, including the ability
+ * to exceed the registry maxLevel V when enchanting.
  *
- * ValhallaMMO's hardcoded skills/enchanting.yml reader only loads vanilla IDs.
- * This bridge explicitly registers namespaced IDs listed in either that config
- * (override) or this plugin's config_native_enchanting.yml (fallback).
+ * The plugin's tier listener converts the already-scaled vanilla roll
+ * without applying amplification a second time. Custom formula overrides
+ * are supported in the native bridge YAML and ValhallaMMO enchanting YAML.
  */
 public final class NativeValhallaScalingBridge {
     private NativeValhallaScalingBridge() { }
@@ -81,19 +80,28 @@ public final class NativeValhallaScalingBridge {
             if (externalFormula == null) {
                 externalFormula = valhallaConfig.getString("scalings." + id);
             }
+
+            // Respect the same formula as the corresponding vanilla enchant:
+            // e.g. (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45.
+            // The upper bound limits the bonus, NOT the total level.
+            String vanillaId = id.endsWith("_bane_of_arthropods") ? "bane_of_arthropods"
+                    : id.endsWith("_smite") ? "smite"
+                    : id.endsWith("_sharpness") ? "sharpness" : null;
+            String vanillaFormula = vanillaId == null ? null
+                    : valhallaConfig.getString("scalings." + vanillaId);
+            if (vanillaFormula == null || vanillaFormula.isBlank()) {
+                vanillaFormula = "(2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45";
+            }
             String formula = externalFormula != null && !externalFormula.isBlank()
                     ? externalFormula : pluginFormula;
-            if (formula == null || formula.isBlank()) {
-                formula = "(1/100) * %rating%,ADD_ON_DEFAULT,0,5";
+            // Auto-migrate the previous test's wrong level-V scaling formula
+            // without requiring the user to delete their installed YAML.
+            if (formula == null || formula.isBlank()
+                    || formula.replace(" ", "").startsWith("(1/100)*%rating%,ADD_ON_DEFAULT,0,5")) {
+                formula = vanillaFormula;
             }
             try {
-                Scaling scaling = Scaling.fromString(formula, null);
-                // Force the Valhalla scaling expression's upper bound to V,
-                // including legacy server configs that still specify 50.
-                Scaling limited = new Scaling(scaling.getExpression(), scaling.getScalingType(),
-                        Math.min(5.0, scaling.getLowerBound()),
-                        5.0);
-                EnchantingItemPropertyManager.registerScaling(enchantment, limited);
+                EnchantingItemPropertyManager.registerScaling(enchantment, Scaling.fromString(formula, null));
                 count++;
             } catch (RuntimeException ex) {
                 EnchantsSquared.logWarning("Invalid native ValhallaMMO scaling " + key + ": " + ex.getMessage());
@@ -102,7 +110,7 @@ public final class NativeValhallaScalingBridge {
 
         EnchantsSquared.logInfo("Registered " + count +
                 " native enchantment scaling formulas with ValhallaMMO."
-                + " Override them in skills/enchanting.yml under quoted enchantssquared:<id> keys.");
+                + " Tier formulas inherit vanilla scaling and can amplify past V.");
         return count;
     }
 }
