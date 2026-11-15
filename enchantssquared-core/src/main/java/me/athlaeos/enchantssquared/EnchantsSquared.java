@@ -10,6 +10,7 @@ import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlRegistryGenerator;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
 import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
 import me.athlaeos.enchantssquared.listeners.*;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class EnchantsSquared extends JavaPlugin {
     private static EnchantsSquared plugin = null;
@@ -108,6 +110,7 @@ public final class EnchantsSquared extends JavaPlugin {
 
         grindstonesEnabled = ConfigManager.getInstance().getConfig("config.yml").get().getBoolean("allow_grindstone_removal", true);
         CommandManager.getInstance();
+        Objects.requireNonNull(getCommand("nativeenchants")).setExecutor(new NativeEnchantsCommand(this));
 
         if (Version.currentVersionOrNewerThan(Version.MINECRAFT_1_14) && grindstonesEnabled) grindstoneListener = registerListener(new GrindstoneListener());
         anvilListener = registerListener(new AnvilListener(), "disable_anvil");
