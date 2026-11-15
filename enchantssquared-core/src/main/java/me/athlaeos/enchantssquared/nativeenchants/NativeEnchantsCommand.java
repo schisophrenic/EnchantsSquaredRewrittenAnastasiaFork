@@ -2,33 +2,58 @@ package me.athlaeos.enchantssquared.nativeenchants;
 
 import me.athlaeos.enchantssquared.EnchantsSquared;
 import me.athlaeos.enchantssquared.config.ConfigManager;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 
-/** Admin command: /esnative generate (restart server after generation). */
-public final class NativeEnchantsCommand implements CommandExecutor {
+/**
+ * /esnative status  - Verify real enchantment registry entries after server boot.
+ * /esnative list    - Report the missing/registered YAML enchantment keys.
+ *
+ * No datapack generation: entries are registered by Paper bootstrap.
+ */
+public final class NativeEnchantsCommand {
     private final EnchantsSquared plugin;
 
     public NativeEnchantsCommand(EnchantsSquared plugin) {
         this.plugin = plugin;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command,
-                             String label, String[] args) {
+    public void execute(CommandSender sender, String[] args) {
         if (!sender.hasPermission("es.native.generate")) {
-            sender.sendMessage("You do not have permission to generate native enchantments.");
-            return true;
+            sender.sendMessage("You do not have permission to inspect native enchantments.");
+            return;
         }
-        if (args.length != 1 || !args[0].equalsIgnoreCase("generate")) {
-            sender.sendMessage("Usage: /" + label + " generate");
-            return true;
+        if (args.length != 1 || (!args[0].equalsIgnoreCase("status")
+                && !args[0].equalsIgnoreCase("list"))) {
+            sender.sendMessage("Usage: /esnative <status|list>");
+            return;
         }
-        ConfigManager.getInstance().reloadConfig("config_native_enchants.yml");
-        new NativeYamlRegistryGenerator(plugin).generate();
-        sender.sendMessage("Native enchantment generation attempted using config_native_enchants.yml."
-                + " Check console for errors, then FULLY RESTART to load registry changes.");
-        return true;
+
+        YamlConfiguration config = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
+        ConfigurationSection definitions = config.getConfigurationSection("enchantments");
+        int configured = 0, registered = 0;
+        if (definitions != null) {
+            for (String id : definitions.getKeys(false)) {
+                if (!definitions.getBoolean(id + ".enabled", true)) continue;
+                configured++;
+                Enchantment enchant = Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id));
+                if (enchant != null) registered++;
+                if (args[0].equalsIgnoreCase("list")) {
+                    sender.sendMessage("enchantssquared:" + id + " - " +
+                            (enchant != null ? "REGISTERED max=" + enchant.getMaxLevel() : "MISSING"));
+                }
+            }
+        }
+        sender.sendMessage("EnchantsSquared native registry: " + registered + "/" + configured +
+                " YAML enchantments registered directly in Paper (no datapack).");
+        if (configured != registered) {
+            sender.sendMessage("For newly added YAML IDs, FULLY RESTART the server. Check bootstrap errors in console.");
+        } else {
+            sender.sendMessage("Try /enchant on a test item with enchantssquared:lesser_sharpness.");
+        }
     }
 }
