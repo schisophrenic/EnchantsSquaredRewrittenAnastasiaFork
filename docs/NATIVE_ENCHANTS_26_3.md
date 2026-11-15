@@ -31,29 +31,87 @@ Currently supplied Java effect handlers:
 
 - melee_flat_bonus: attack event damage += base + (level - 1) * per_level
 - melee_multiplier: attack event damage *= 1 + base + (level - 1) * per_level
+- on_hit_potion: chance to apply configurable potion effects on melee hit
 - none: register-only; add a Java handler for a special ability
 
 These formulae are starter implementations, not copied from the 1.12.2 mod.
 New complex effects can be implemented as additional Java handlers.
 
-## Example per-player Sharpness progression
+## Quality calculation from the user's actual ValhallaMMO configuration
 
-1. No unlock: minecraft:sharpness is offered normally.
-2. ENCHANTING_QUALITY >= 80 and enchanting_perk_sharpnesses: lesser_sharpness.
-3. ENCHANTING_QUALITY >= 150 plus enchanting_perk_ng1 and sharpnesses perk: advanced_sharpness.
-4. ENCHANTING_QUALITY >= 250 plus enchanting_perk_ng2 and sharpnesses perk: supreme_sharpness.
+The server's enchanting_progression.yml gives +1 enchanting skill per level.
+Non-NG core quality perks add 50 + 50 + 80 + 100 + 150 = +430.
+Further NG-level quality perks contribute:
+- NG1 at level 125: +88 +110 = 753 total effective quality
+- NG2 at level 150: +115 +92 = 985
+- NG3 at level 175: +180 = 1190
+- NG4 at level 200: +195 = 1410
+- NG5 at level 200: +225 +150 = 1785
 
-Thresholds are illustrative and are **configurable**. The plugin evaluates
-ValhallaMMO's effective enchanting quality using ENCHANTING_QUALITY and
-ENCHANTING_FRACTION_QUALITY, just as its own enchantment listener does.
-On each roll it removes the base/lesser tiers from the resulting enchantment
-map and inserts **only the highest eligible replacement**.
+Pre-NG1 at level 100: 100 +430 = 530.
+
+**Assumptions:** This assumes every relevant quality perk was bought,
+and no fractional quality multiplier, other equipment bonuses or Sovereign
+specialization (+50) were applied. Values are calibrated progress benchmarks,
+not minimum or mandatory quality for that NG stage.
+
+The uploaded enchanting.yml uses Sharpness/Smite/Bane scaling of
+`0.02 * quality - 2, ADD_ON_DEFAULT, 1,45`. These are the *vanilla*
+scaling parameters; custom enchantment levels instead follow the YAML NG
+quality progression, independent of original vanilla Sharpness level.
+
+## Current NG1–NG5 tier rules
+
+| NG stage | Tier | Allowed native levels | Quality at first | Quality per +1 | Quality reaching cap |
+|---|---|---|---:|---:|---:|
+| 1 | Lesser | I–X | 550 | 20 | 730 |
+| 2 | Lesser | XI–XXX | 755 | 12 | 983 |
+| 3 | Advanced | I–X | 990 | 22 | 1188 |
+| 4 | Advanced | XI–XXX | 1195 | 11 | 1404 |
+| 5 | Supreme | I–X | 1420 | 39 | 1771 |
+
+The player's **NG level is a hard cap** regardless of enchanting quality.
+All three tier families (Sharpness, Smite, Bane of Arthropods) require
+`enchanting_perk_sharpnesses`, which already exists in the provided
+ValhallaMMO progression. NG checks use
+`enchanting_perk_ng1` through `enchanting_perk_ng5` from that same file.
+The plugin uses `ENCHANTING_QUALITY * (1 + ENCHANTING_FRACTION_QUALITY)`
+like ValhallaMMO. It uses the highest unlocked band whose minimum quality
+has been reached. If no band qualifies, it preserves the original vanilla
+enchantment. Every final roll removes the base and lower tiers before
+adding the chosen one.
+
+## Perk-only enchantments for non-tier mechanics
+
+The example `envenomed` is a **separate** custom enchantment:
+- It is a real registered enchantment with its own Java potion-effect handler.
+- It has no independent enchanting-table entry.
+- Enchanting can grant it as a bonus if the player has
+  `enchanting_perk_poison`, has reached NG2 and quality >= 850.
+- Base chance: 10% per qualifying enchanting session; enchantment levels scale
+  +1 every 150 quality after 850, capped at the enchantment's maximum.
+- The Java handler currently applies poison and wither with configurable
+  durations and chance (starter values, not a verified 1.12.2 damage formula).
+
+The user-provided ValhallaMMO config already contains useful perk IDs:
+`enchanting_perk_sharpnesses`, `enchanting_perk_protections`,
+`enchanting_perk_offensive`, `enchanting_perk_defensive`,
+`enchanting_perk_utility`, `enchanting_perk_fire`,
+`enchanting_perk_freezing`, `enchanting_perk_poison`,
+`enchanting_perk_arcane`, `enchanting_perk_sovereign`,
+and `enchanting_perk_spellforged`.
+
+**No ValhallaMMO progression edit is required for these existing perk IDs.**
+When introducing a genuinely new perk with a new ID, it must be added to
+ValhallaMMO's progression and localization and tested for unlock behavior.
 
 This per-player substitution does not delete minecraft:sharpness from the global
 registry. Other players can still roll it, and previously enchanted items retain it.
 
 Tier enchantments are excluded from the *normal* enchanting table tag: they
 cannot independently appear before their required perks are unlocked.
+Independent perk-only enchantments are similarly granted through configured
+Java bonus rolls, not globally available table-tag entries.
 The vanilla enchanting table tag is extended with replace=false. Existing core
 EnchantsSquared enchants may still appear normally if their config marks
 them as obtainable.
