@@ -28,16 +28,18 @@ public final class NativeEnchantingPerkBridge implements Listener {
             // The tier substitutions inherit the complete Valhalla-amplified
             // vanilla roll and its specific/generic perk bonuses already.
             // Adding those perks a second time here would double-amplify tiers.
-            if (key.getKey().matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")) {
+            if (key.getKey().matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods|power|punch|flame|fire_aspect|protection|fire_protection|blast_protection|projectile_protection|magic_protection)")) {
                 continue;
             }
             int bonus = 0;
-            String source = config.getString("replacements." + key.getKey());
+            String source = key.getKey().equals("magic_protection")
+                    ? "protection" : config.getString("replacements." + key.getKey());
             if (source != null && !source.isBlank()){
                 Enchantment vanilla = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(source.toLowerCase()));
                 if (vanilla != null) bonus += profile.getEnchantmentBonus(vanilla);
             }
-            String group = config.getString("categories." + key.getKey(), "UNDEFINED").toUpperCase();
+            String group = key.getKey().equals("magic_protection")
+                    ? "DEFENSIVE" : config.getString("categories." + key.getKey(), "UNDEFINED").toUpperCase();
             try {
                 bonus += profile.getEnchantmentBonus(EnchantmentClassification.valueOf(group));
             } catch (IllegalArgumentException ignored) {
