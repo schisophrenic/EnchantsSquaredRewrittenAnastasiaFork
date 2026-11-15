@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.loot.LootTable;
@@ -101,7 +102,7 @@ public final class NativeEnchantLootListener implements Listener {
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH
                 || !(event.getCaught() instanceof Item caught)) return;
         ItemStack generatedGear = chanceForEquipment("fishing")
-                ? makeEquipment() : null;
+                ? makeEquipment("fishing") : null;
         if (generatedGear != null) {
             caught.setItemStack(generatedGear);
             return;
@@ -115,7 +116,7 @@ public final class NativeEnchantLootListener implements Listener {
         LootTable table = event.getLootTable();
         if (table == null || !table.getKey().toString().startsWith("minecraft:chests/")) return;
         List<ItemStack> items = new ArrayList<>(event.getLoot());
-        ItemStack gear = chanceForEquipment("structure_chest") ? makeEquipment() : null;
+        ItemStack gear = chanceForEquipment("structure_chest") ? makeEquipment("structure_chest") : null;
         if (gear != null) items.add(gear);
         Entry roll = choose("structure_chest", new ItemStack(Material.ENCHANTED_BOOK));
         if (roll != null) items.add(book(roll));
@@ -125,15 +126,54 @@ public final class NativeEnchantLootListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobDrops(EntityDeathEvent event) {
         if (event.getEntity() instanceof Player) return;
-        ItemStack gear = chanceForEquipment("mob_drop") ? makeEquipment() : null;
+        ItemStack gear = chanceForEquipment("mob_drop") ? makeEquipment("mob_drop") : null;
         if (gear != null) event.getDrops().add(gear);
         Entry roll = choose("mob_drop", new ItemStack(Material.ENCHANTED_BOOK));
         if (roll != null) event.getDrops().add(book(roll));
     }
 
-    private ItemStack makeEquipment() {
+    private ItemStack makeEquipment(String source) {
         if (!EnchantsSquared.isValhallaHooked()) return null;
-        return NativeLowQualityEquipmentLoot.create(config);
+        ItemStack item = NativeLowQualityEquipmentLoot.create(config);
+        if (item == null || item.getType().isAir()) return null;
+
+        // Optional enchanted natural gear, after ValhallaEquipment has rolled
+        // its native quality/class/model/stats. Keep PDC and item model intact.
+        double chance = Math.max(0.0, Math.min(1.0,
+                config.getDouble("loot_equipment.native_enchant_chance", 0.20)));
+        if (ThreadLocalRandom.current().nextDouble() >= chance) return item;
+
+        // Only draw from this source's native enchant loot pool, not NG tiered
+        // enchantments (those have no acquisition entries by default).
+        Entry roll = chooseCompatible(source, item);
+        if (roll == null) return item;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !roll.enchant().canEnchantItem(item)) return item;
+        for (Enchantment existing : meta.getEnchants().keySet()) {
+            if (roll.enchant().conflictsWith(existing) || existing.conflictsWith(roll.enchant())) return item;
+        }
+        meta.addEnchant(roll.enchant(), level(roll.enchant()), true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private Entry chooseCompatible(String source, ItemStack item) {
+        List<Entry> eligible = new ArrayList<>();
+        for (Entry entry : pool) {
+            if (!entry.enchant().canEnchantItem(item)) continue;
+            double chance = entry.chance().getOrDefault(source, 0.0);
+            if (chance <= 0) continue;
+            if (ThreadLocalRandom.current().nextDouble() < chance) eligible.add(entry);
+        }
+        if (eligible.isEmpty()) return null;
+        double totalWeight = 0;
+        for (Entry entry : eligible) totalWeight += rarityWeight(entry.rarity());
+        double roll = ThreadLocalRandom.current().nextDouble() * totalWeight;
+        for (Entry entry : eligible) {
+            roll -= rarityWeight(entry.rarity());
+            if (roll <= 0) return entry;
+        }
+        return eligible.get(eligible.size() - 1);
     }
 
     private boolean chanceForEquipment(String source) {
