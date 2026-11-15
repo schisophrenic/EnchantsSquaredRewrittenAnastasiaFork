@@ -207,7 +207,8 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
             YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
                     new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
             int newKeys = 0;
-            for (String root : List.of("enchantments", "tier_families", "perk_groups", "settings")) {
+            for (String root : List.of("enchantments", "tier_families", "perk_groups",
+                    "settings", "display_aliases", "disabled_base_enchants")) {
                 ConfigurationSection bundled = defaults.getConfigurationSection(root);
                 if (bundled == null) continue;
                 for (var entry : bundled.getValues(true).entrySet()) {
