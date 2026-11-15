@@ -28,6 +28,47 @@ display_aliases:
 # Hard-disabled legacy spells. Other existing enchants are unchanged.
 blocked_base_enchants: [damage_reduction]
 
+# Naturally dropped armor/tools/utility loot: no Smithing skill required.
+# Uses ValhallaMMO's real SmithingItemPropertyManager quality and attribute
+# APIs (NOT an invented lore tag). It does not call ValhallaEquipment's
+# crafting-only class/model randomizer. Test separately with that plugin.
+loot_equipment:
+  enabled: true
+  quality_fraction_min: 0.55  # 55% of the material neutral quality
+  quality_fraction_max: 0.80  # 80% of neutral; deliberately LOW quality
+  item_pool:
+    - IRON_HELMET
+    - IRON_CHESTPLATE
+    - IRON_LEGGINGS
+    - IRON_BOOTS
+    - DIAMOND_CHESTPLATE
+    - IRON_SWORD
+    - IRON_PICKAXE
+    - DIAMOND_PICKAXE
+    - BOW
+    - SHIELD
+    - FISHING_ROD
+  # ValhallaMMO premium item attributes. Copied and rolled on the loot.
+  attribute_pool:
+    - CRIT_CHANCE
+    - CRIT_DAMAGE
+    - STUN_CHANCE
+    - LIFE_STEAL
+    - FIRE_RESISTANCE
+    - MAGIC_RESISTANCE
+    - BLEED_CHANCE
+    - DURABILITY_MULTIPLIER
+    - ENTITY_DROPS
+  max_random_attributes: 2
+  attribute_min: 0.01
+  attribute_max: 0.05
+  # Chance PER loot event to add one low-quality equipment item.
+  acquisition:
+    structure_chest: 0.10
+    fishing: 0.025
+    mob_drop: 0.007
+
+
 settings:
   # Existing EnchantsSquared PDC effects remain enabled independently.
   # Only this enchantments: section is registered as new native entries.
