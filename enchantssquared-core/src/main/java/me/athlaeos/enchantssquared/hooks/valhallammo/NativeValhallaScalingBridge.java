@@ -91,7 +91,7 @@ public final class NativeValhallaScalingBridge {
                 // Force the Valhalla scaling expression's upper bound to V,
                 // including legacy server configs that still specify 50.
                 Scaling limited = new Scaling(scaling.getExpression(), scaling.getScalingType(),
-                        scaling.getLowerBound() == null ? null : Math.min(5.0, scaling.getLowerBound()),
+                        Math.min(5.0, scaling.getLowerBound()),
                         5.0);
                 EnchantingItemPropertyManager.registerScaling(enchantment, limited);
                 count++;
