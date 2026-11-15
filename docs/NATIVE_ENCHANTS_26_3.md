@@ -62,13 +62,22 @@ quality progression, independent of original vanilla Sharpness level.
 
 ## Current NG1–NG5 tier rules
 
+Every opening threshold below is **100 above** the previous draft's
+threshold, as requested. Merely unlocking NG1–NG5 no longer gives the
+maximum enchantment level; the player must earn more effective quality.
+
+The `config_native_enchants.yml` file includes configurable
+`perk_groups` aliases for the approved offensive, defensive, elemental,
+magical, attributes, smithing and utility ValhallaMMO perk branches.
+
+
 | NG stage | Tier | Allowed native levels | Quality at first | Quality per +1 | Quality reaching cap |
 |---|---|---|---:|---:|---:|
-| 1 | Lesser | I–X | 550 | 20 | 730 |
-| 2 | Lesser | XI–XXX | 755 | 12 | 983 |
-| 3 | Advanced | I–X | 990 | 22 | 1188 |
-| 4 | Advanced | XI–XXX | 1195 | 11 | 1404 |
-| 5 | Supreme | I–X | 1420 | 39 | 1771 |
+| 1 | Lesser | I–X | 650 | 20 | 830 |
+| 2 | Lesser | XI–XXX | 855 | 12 | 1083 |
+| 3 | Advanced | I–X | 1090 | 22 | 1288 |
+| 4 | Advanced | XI–XXX | 1295 | 11 | 1504 |
+| 5 | Supreme | I–X | 1520 | 39 | 1871 |
 
 The player's **NG level is a hard cap** regardless of enchanting quality.
 All three tier families (Sharpness, Smite, Bane of Arthropods) require
@@ -87,7 +96,7 @@ The example `envenomed` is a **separate** custom enchantment:
 - It is a real registered enchantment with its own Java potion-effect handler.
 - It has no independent enchanting-table entry.
 - Enchanting can grant it as a bonus if the player has
-  `enchanting_perk_poison`, has reached NG2 and quality >= 850.
+  the `elemental_poison` perk group (`enchanting_perk_poison`), has reached NG2 and quality >= 850.
 - Base chance: 10% per qualifying enchanting session; enchantment levels scale
   +1 every 150 quality after 850, capped at the enchantment's maximum.
 - The Java handler currently applies poison and wither with configurable
