@@ -43,15 +43,15 @@ public final class ValhallaTierEnchantingListener implements Listener {
     private final Map<NamespacedKey, Family> families = new LinkedHashMap<>();
     private final List<Bonus> bonusEnchants = new ArrayList<>();
     private final int maximumBonusEnchants;
-    private final double tierPerkMultiplier;
+    private final double perkQualityPerBonus;
     private final boolean nativeScalingsEnabled;
 
     public ValhallaTierEnchantingListener(YamlConfiguration config) {
         maximumBonusEnchants = Math.max(0, Math.min(10, config.getInt("settings.maximum_bonus_enchantments", 1)));
         YamlConfiguration valhallaBridge = ConfigManager.getInstance()
                 .getConfig("config_native_enchanting.yml").get();
-        tierPerkMultiplier = Math.max(0.0, Math.min(1.0,
-                valhallaBridge.getDouble("tier_perk_level_multiplier", 0.2)));
+        perkQualityPerBonus = Math.max(0.0, Math.min(50.0,
+                valhallaBridge.getDouble("tier_perk_quality_per_bonus", 5.0)));
         nativeScalingsEnabled = valhallaBridge.getBoolean("native_scalings_enabled", true);
         ConfigurationSection sections = config.getConfigurationSection("tier_families");
         if (sections != null) for (String name : sections.getKeys(false)) {
@@ -76,6 +76,26 @@ public final class ValhallaTierEnchantingListener implements Listener {
                     int step = Math.max(1, number(row.get("quality_per_level"), 1));
                     int first = Math.max(1, number(row.get("first_level"), 1));
                     int cap = Math.max(first, number(row.get("max_level"), first));
+                    if (id.getKey().matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")) {
+                        // Migrate old tier progression I–X / XI–XXX on the fly.
+                        // Existing configs remain valid and are never rewritten.
+                        // Unlock stage, quality required, and the five-level
+                        // ceiling are authoritative in the new compact system.
+                        if (cap > 5 || first > 5) {
+                            first = (ng == 2 || ng == 4) ? 4 : 1;
+                            cap = (ng == 1 || ng == 3) ? 3 : 5;
+                            step = switch (ng) {
+                                case 1 -> 90;
+                                case 2 -> 228;
+                                case 3 -> 99;
+                                case 4 -> 209;
+                                default -> 88;
+                            };
+                        } else {
+                            first = Math.min(5, first);
+                            cap = Math.min(5, cap);
+                        }
+                    }
                     bands.add(new Band(id, ng, minimum, step, first, cap, tierPerks));
                 }
             }
@@ -209,7 +229,17 @@ public final class ValhallaTierEnchantingListener implements Listener {
             Enchantment registered = Registry.ENCHANTMENT.get(band.enchantment());
             if (registered == null) continue;
 
-            int bonusLevels = (quality - band.minimumQuality()) / band.qualityStep();
+            Enchantment vanilla = Registry.ENCHANTMENT.get(family.base());
+            int sourceBonus = vanilla == null ? 0
+                    : enchantingProfile.getEnchantmentBonus(vanilla)
+                        + enchantingProfile.getEnchantmentBonus(EnchantmentClassification.OFFENSIVE);
+            // Express generic +specific Valhalla perks as a modest quality
+            // improvement instead of instantly adding multiple full levels.
+            // A fresh NG unlock still cannot jump to the maximum level.
+            int bonusQuality = (int) Math.floor(Math.max(0, sourceBonus) * perkQualityPerBonus);
+            long adjustedQuality = (long) quality + bonusQuality;
+            int bonusLevels = (int) Math.min(Integer.MAX_VALUE,
+                    (adjustedQuality - band.minimumQuality()) / band.qualityStep());
             int level = band.firstLevel() + bonusLevels;
             // Native Enchantment instances are registered through Paper bootstrap.
             // Use ValhallaMMO's public scaling registry for their NG-band levels,
@@ -217,21 +247,8 @@ public final class ValhallaTierEnchantingListener implements Listener {
             // rating to 100 units per level before invoking Scaling.evaluate().
             if (nativeScalingsEnabled && EnchantingItemPropertyManager.getScaling(registered) != null) {
                 int normalized = (int) Math.min(Integer.MAX_VALUE,
-                        ((long) (quality - band.minimumQuality()) * 100L) / band.qualityStep());
+                        ((adjustedQuality - band.minimumQuality()) * 100L) / band.qualityStep());
                 level = EnchantingItemPropertyManager.getScaledLevel(registered, normalized, band.firstLevel());
-            }
-
-            // ValhallaMMO's EnchantingProfile only maps vanilla keys to specific
-            // bonuses. Inherit both the vanilla family bonus and generic offensive
-            // bonus instead of silently treating custom keys as UNDEFINED.
-            // A configurable partial translation prevents NG5's permanent +10
-            // generic offense from instantly maxing Supreme on unlock.
-            Enchantment vanilla = Registry.ENCHANTMENT.get(family.base());
-            if (vanilla != null && tierPerkMultiplier > 0) {
-                int sourceBonus = enchantingProfile.getEnchantmentBonus(vanilla)
-                        + enchantingProfile.getEnchantmentBonus(EnchantmentClassification.OFFENSIVE);
-                int tierBonus = (int) Math.floor(Math.max(0, sourceBonus) * tierPerkMultiplier);
-                level += tierBonus;
             }
 
             // An NG milestone and its required quality remain a strict ceiling.
