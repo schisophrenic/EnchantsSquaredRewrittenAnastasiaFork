@@ -354,6 +354,12 @@ public class CustomEnchantManager {
     }
 
     public void registerEnchant(CustomEnchant enchant){
+        // Allow disabling legacy enchantments without changing their IDs.
+        // Old PDC items keep their metadata but disabled effects do not run.
+        String id = enchant.getType().toLowerCase(java.util.Locale.ROOT);
+        YamlConfiguration nativeConfig = ConfigManager.getInstance()
+                .getConfig("config_native_enchants.yml").get();
+        if (nativeConfig.getStringList("blocked_base_enchants").contains(id)) return;
         if (enchant.isEnabled()) {
             allEnchants.put(enchant.getId(), enchant);
             if (EnchantsSquared.isValhallaHooked()) ValhallaHook.registerEnchantmentModifier(enchant);
