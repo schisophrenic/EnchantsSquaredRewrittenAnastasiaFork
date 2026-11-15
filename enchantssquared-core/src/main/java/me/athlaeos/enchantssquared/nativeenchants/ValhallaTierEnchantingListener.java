@@ -78,7 +78,16 @@ public final class ValhallaTierEnchantingListener implements Listener {
             ConfigurationSection item = perkSection.getConfigurationSection(name);
             if (item == null || !item.getBoolean("enabled", true)) continue;
             NamespacedKey id = parse(item.getString("enchantment"));
-            List<String> perks = item.getStringList("required_perks");
+            List<String> perks = new ArrayList<>(item.getStringList("required_perks"));
+            String group = item.getString("perk_group");
+            if (group != null && !group.isBlank()) {
+                String groupPerk = config.getString("perk_groups." + group);
+                if (groupPerk == null || groupPerk.isBlank()) {
+                    EnchantsSquared.logWarning("Unknown perk_group '" + group + "' in " + name + "; enchantment disabled");
+                    continue;
+                }
+                perks.add(groupPerk);
+            }
             if (id == null || perks.isEmpty()) {
                 EnchantsSquared.logWarning("Perk-enchantment '" + name + "' needs an enchantment ID and required_perks");
                 continue;
