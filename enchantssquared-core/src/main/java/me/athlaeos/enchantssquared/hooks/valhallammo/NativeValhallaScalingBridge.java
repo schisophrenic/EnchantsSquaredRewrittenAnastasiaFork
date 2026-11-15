@@ -71,6 +71,13 @@ public final class NativeValhallaScalingBridge {
             scalingIds.add("magic_protection");
         }
 
+        // Any native registry entry can exceed its normal enchantment max.
+        // Its effect handler must use the actual item level (not maxLevel).
+        ConfigurationSection allNative = nativeDefinitions.getConfigurationSection("enchantments");
+        if (allNative != null) for (String name : allNative.getKeys(false)) {
+            if (allNative.getBoolean(name + ".enabled", true)) scalingIds.add(name);
+        }
+
         int count = 0;
         Set<String> warned = new HashSet<>();
         for (String id : scalingIds) {
@@ -107,11 +114,15 @@ public final class NativeValhallaScalingBridge {
             String vanillaFormula = vanillaId == null ? null
                     : valhallaConfig.getString("scalings." + vanillaId);
             if (vanillaFormula == null || vanillaFormula.isBlank()) {
-                // Flame has maxLevel I in vanilla, so it is not amplified.
-                vanillaFormula = "0,ADD_ON_DEFAULT,0,1";
+                // Custom native enchants may scale even if their base max is
+                // below the amplified output. Flame's normal max I is
+                // explicitly exempted by ValhallaMMO itself.
+                vanillaFormula = "(1/100) * %rating% - 1,ADD_ON_DEFAULT,0,45";
             }
+            String perEnchant = nativeDefinitions.getString("enchantments." + id + ".valhalla_scaling");
             String formula = externalFormula != null && !externalFormula.isBlank()
-                    ? externalFormula : pluginFormula;
+                    ? externalFormula : perEnchant != null && !perEnchant.isBlank()
+                    ? perEnchant : pluginFormula;
             // Auto-migrate the previous test's wrong level-V scaling formula
             // without requiring the user to delete their installed YAML.
             if (formula == null || formula.isBlank()
