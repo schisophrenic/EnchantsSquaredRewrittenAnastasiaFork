@@ -14,6 +14,20 @@
 #   none: registry-only until you implement a Java handler
 #
 # More event handlers can be added without changing how enchantments are registered.
+# Cosmetic aliases: only names change. Existing PDC IDs/Java behavior stay intact.
+display_aliases:
+  vampiric: Life Steal
+  sapping: Adept
+  vitality: Strengthened Vitality
+  sunforged: Smelter
+  lava_walker: Lava Walker
+  pulling: Dragging
+  piercer: Penetrating Edge
+  shielding: Natural Blocking
+
+# Hard-disabled legacy spells. Other existing enchants are unchanged.
+blocked_base_enchants: [damage_reduction]
+
 settings:
   # Existing EnchantsSquared PDC effects remain enabled independently.
   # Only this enchantments: section is registered as new native entries.
