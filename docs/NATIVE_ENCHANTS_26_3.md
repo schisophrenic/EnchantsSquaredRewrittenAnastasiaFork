@@ -1,3 +1,91 @@
+## Expanded Java registry test: bows, fire, protection, magic
+
+The fork now registers **38 genuine Paper enchantments** in Java, not a world
+datapack: the previous 9 Sharpness/Smite/Bane tiers, Envenomed, and
+28 new entries across nine families.
+
+### New families and normal registry maxima
+
+| Base | Lesser / Advanced / Supreme | Base max level |
+|---|---|---:|
+| Power | lesser_power / advanced_power / supreme_power | V |
+| Punch | lesser_punch / advanced_punch / supreme_punch | II |
+| Flame | lesser_flame / advanced_flame / supreme_flame | I |
+| Fire Aspect | lesser_fire_aspect / advanced_fire_aspect / supreme_fire_aspect | II |
+| Protection | lesser_protection / advanced_protection / supreme_protection | IV |
+| Fire Protection | lesser_fire_protection / advanced_fire_protection / supreme_fire_protection | IV |
+| Blast Protection | lesser_blast_protection / advanced_blast_protection / supreme_blast_protection | IV |
+| Projectile Protection | lesser_projectile_protection / advanced_projectile_protection / supreme_projectile_protection | IV |
+| **Magic Protection** | magic_protection, lesser_magic_protection, advanced_magic_protection, supreme_magic_protection | IV |
+
+All tier enchants use the original family base level rolled and amplified by
+ValhallaMMO. The maximums above are normal registry maxima; enhanced levels can
+exceed these (except Flame is naturally level I, as in vanilla).
+
+**NG gates** are shared by all families:
+- NG1 + effective enchanting Q650: Lesser
+- NG2 + Q855: Lesser continues
+- NG3 + Q1090: Advanced
+- NG4 + Q1295: Advanced continues
+- NG5 + Q1520: Supreme
+
+Perks: Power/Punch use `enchanting_perk_sharpnesses`; Flame/Fire Aspect
+use `enchanting_perk_fire`; the five protection families use
+`enchanting_perk_protections`. No new ValhallaMMO perk IDs are invented.
+
+### Java mechanics
+
+- Power, Punch and Flame apply at `EntityShootBowEvent` to the projectile
+  actually fired: Power adds `0.5 × (level + 1)` arrow damage, Punch adds
+  level-based knockback, Flame ignites the projectile.
+- Fire Aspect ignites only the direct melee target, 4 seconds per level.
+- Native Protection contributes 4% per level; Fire, Blast and Projectile
+  Protection contribute 8% per level against their matching damage categories.
+  They share vanilla's 80% enchantment-protection cap with ordinary Protection
+  gear, without double applying vanilla damage reduction.
+- Fire Protection shortens applied burning duration by 15% per level, to 80%.
+- New Magic Protection applies 3% elemental damage reduction per level of the
+  strongest Magic Protection variant on each armor piece. Damage types include
+  ValhallaMMO's FIRE, FREEZING, LIGHTNING, POISON, MAGIC, RADIANT, NECROTIC
+  and explosion-element hits. **Combined enchantment-based mitigation is
+  hard-capped at 85%, across the entire armor set.**
+- The Magic Protection 85% cap does not override other plugins' independent
+  resistance modifiers, armor values, toughness, or potion effects; total
+  final mitigation across ALL independent systems may exceed 85%.
+
+### Existing server configuration migration
+
+When upgrading from the previous test JAR, the Paper bootstrapper reads the
+bundled `config_native_enchants.yml` and adds missing keys to the already
+installed `plugins/EnchantsSquared/config_native_enchants.yml`. Existing
+configuration values are retained; YAML formatting/comments may be rewritten
+by Bukkit's YAML serializer. **Back up the old configuration first.**
+
+The Valhalla scaling bridge discovers new tier families even if your old
+`config_native_enchanting.yml` is still installed, and uses the matching
+vanilla `skills/enchanting.yml` scaling formulas. **Do not replace your
+existing ValhallaMMO enchanting.yml just to install this build.**
+
+### Test protocol
+
+1. Back up the world/inventories and old EnchantsSquared configurations.
+2. Install the new test JAR, removing the old one; **fully restart** the server.
+3. Run `/esnative status`: expect **38/38** registered enchantments.
+4. Hold a compatible item and test `/enchant @s enchantssquared:lesser_power 1`,
+   `/enchant @s enchantssquared:lesser_fire_aspect 1`, and
+   `/enchant @s enchantssquared:magic_protection 1` on armor.
+5. Confirm that higher enchanted levels produced through ValhallaMMO are
+   preserved on advanced/supreme tiers, even above the normal registry max.
+6. Compare elemental hits with one, two and four Magic Protection armor pieces;
+   enchantment-based reduction must not reach 90%, even for overlevelled pieces.
+7. Test normal EnchantsSquared enchantments, Sharpness/Smite/Bane tiers, and
+   enchanted bows/armor again for regressions.
+
+Java compilation and artifact contents are verified; **runtime behavior on
+Purpur 26.3 still needs user testing**.
+
+---
+
 # EnchantsSquared direct Java registry enchantments — Purpur 26.3
 
 ## Corrected architecture
