@@ -1,0 +1,21 @@
+{
+  "description": {
+    "text": "Pact of the Perfectionist"
+  },
+  "supported_items": "#minecraft:enchantable/durability",
+  "weight": 20,
+  "max_level": 2,
+  "min_cost": {
+    "base": 5,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "any"
+  ],
+  "effects": {}
+}

@@ -1,0 +1,29 @@
+{
+  "description": {
+    "text": "Excavation"
+  },
+  "supported_items": [
+    "#minecraft:axes",
+    "#minecraft:pickaxes",
+    "#minecraft:shovels",
+    "#minecraft:hoes"
+  ],
+  "weight": 1,
+  "max_level": 1,
+  "min_cost": {
+    "base": 5,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "hand"
+  ],
+  "effects": {},
+  "exclusive_set": [
+    "enchantssquared:tree_feller"
+  ]
+}

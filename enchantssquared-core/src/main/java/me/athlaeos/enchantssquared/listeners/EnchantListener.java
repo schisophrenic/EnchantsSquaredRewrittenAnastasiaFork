@@ -25,6 +25,8 @@ public class EnchantListener implements Listener {
     @EventHandler
     public void onEnchant(EnchantItemEvent e){
         if (e.isCancelled()) return;
+        // Registered native enchantments already roll at the enchanting table.
+        if (CustomEnchantManager.getInstance().hasNativeRegistryEnchantments()) return;
         Player p = e.getEnchanter();
         if (!PlayerOptionsManager.getManager().doesPlayerWantEnchants(p)) return;
         if (e.getExpLevelCost() >= level_minimum){

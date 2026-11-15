@@ -1,0 +1,27 @@
+{
+  "description": {
+    "text": "Quickened"
+  },
+  "supported_items": [
+    "#minecraft:swords",
+    "#minecraft:pickaxes",
+    "#minecraft:shovels",
+    "#minecraft:axes",
+    "#minecraft:hoes"
+  ],
+  "weight": 10,
+  "max_level": 2,
+  "min_cost": {
+    "base": 5,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "hand"
+  ],
+  "effects": {}
+}

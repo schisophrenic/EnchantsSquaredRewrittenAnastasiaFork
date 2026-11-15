@@ -8,6 +8,7 @@ import me.athlaeos.enchantssquared.domain.Version;
 import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
 import me.athlaeos.enchantssquared.managers.AnimationRegistry;
@@ -70,6 +71,7 @@ public final class EnchantsSquared extends JavaPlugin {
         if (valhallaHooked){
             this.getLogger().info("ValhallaMMO hooked! Adding a bunch of cool stuff.");
             saveConfig("config_valhallammo.yml");
+            saveConfig("config_native_enchanting.yml");
         }
         worldGuardHooked = hasPlugin("WorldGuard");
         if (worldGuardHooked){
@@ -140,7 +142,10 @@ public final class EnchantsSquared extends JavaPlugin {
             enchant.onPluginEnable();
         }
         RegularIntervalEnchantmentClockManager.startClock();
-        if (valhallaHooked) ValhallaHook.registerValhallaEnchantments();
+        if (valhallaHooked) {
+            ValhallaHook.registerValhallaEnchantments();
+            registerListener(new NativeEnchantingPerkBridge());
+        }
     }
 
     public static NMS getNms() {

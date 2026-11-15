@@ -1,0 +1,23 @@
+# Optional translation of ValhallaMMO enchanting perk bonuses to real custom enchantments
+enabled: true
+replacements:
+  excavation: efficiency
+  rejuvenation: unbreaking
+  kinship: fortune
+  crushing: sharpness
+  perforating: sharpness
+  plating: protection
+  beheading: looting
+categories:
+  excavation: UTILITY
+  rejuvenation: UTILITY
+  kinship: UTILITY
+  crushing: OFFENSIVE
+  perforating: OFFENSIVE
+  plating: DEFENSIVE
+  beheading: OFFENSIVE
+  bleeding: OFFENSIVE
+  reach: OFFENSIVE
+  dodge: DEFENSIVE
+  smithing: UTILITY
+  brewing: UTILITY

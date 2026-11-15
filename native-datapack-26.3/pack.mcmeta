@@ -1,0 +1,13 @@
+{
+  "pack": {
+    "description": "EnchantsSquared native enchantments for Minecraft 26.3",
+    "min_format": [
+      121,
+      0
+    ],
+    "max_format": [
+      121,
+      0
+    ]
+  }
+}
