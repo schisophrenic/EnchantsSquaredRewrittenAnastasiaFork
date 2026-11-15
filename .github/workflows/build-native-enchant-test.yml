@@ -61,6 +61,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EnchantsSquared-JavaRegistry-NG-Test
-          path: dist-test/EnchantsSquared_NativeEnchant_NG_Test.jar
+          path: dist-test/EnchantsSquared_JavaRegistry_NG_Test.jar
           if-no-files-found: error
           retention-days: 14
