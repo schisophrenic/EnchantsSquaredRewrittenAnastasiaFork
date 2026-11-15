@@ -1,6 +1,7 @@
 # Edit this file to declare NEW REAL Minecraft enchantments.
-# The plugin generates a server datapack automatically on startup.
-# Restart again after a change so Minecraft loads the new registry definitions.
+# Paper registers these enchantments DIRECTLY during Java plugin bootstrap.
+# No datapack is written to your world. Restart after editing this file,
+# because Minecraft's enchantment registry freezes before onEnable().
 #
 # Native registry entries are global. The enchantment table's tier replacements
 # are PLAYER-SPECIFIC, based on their ValhallaMMO perks and enchanting quality.
@@ -12,9 +13,8 @@
 #
 # More event handlers can be added without changing how enchantments are registered.
 settings:
-  generate_datapack: true
-  datapack_name: EnchantsSquaredNativeAuto
-  include_existing_enchantssquared: true
+  # Existing EnchantsSquared PDC effects remain enabled independently.
+  # Only this enchantments: section is registered as new native entries.
   maximum_bonus_enchantments: 1
 
 enchantments:
