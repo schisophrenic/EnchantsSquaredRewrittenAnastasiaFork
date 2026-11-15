@@ -1,0 +1,84 @@
+package me.athlaeos.enchantssquared.hooks.valhallammo;
+
+import me.athlaeos.enchantssquared.EnchantsSquared;
+import me.athlaeos.enchantssquared.config.ConfigManager;
+import me.athlaeos.valhallammo.dom.Scaling;
+import me.athlaeos.valhallammo.item.EnchantingItemPropertyManager;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.plugin.Plugin;
+
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Connects Paper's real custom enchantments to ValhallaMMO's public
+ * EnchantingItemPropertyManager scaling registry. No ValhallaMMO fork needed.
+ *
+ * Native formulas use a normalized quality rating within each unlocked NG band:
+ *   rating = (actualQuality - ngBandMinQuality) * 100 / ngBandQualityPerLevel
+ * A formula like "(1/100) * %rating%,ADD_ON_DEFAULT,0,50" therefore preserves
+ * the existing approved NG quality progression while allowing other tuning.
+ *
+ * ValhallaMMO's hardcoded skills/enchanting.yml reader only loads vanilla IDs.
+ * This bridge explicitly registers namespaced IDs listed in either that config
+ * (override) or this plugin's config_native_enchanting.yml (fallback).
+ */
+public final class NativeValhallaScalingBridge {
+    private NativeValhallaScalingBridge() { }
+
+    public static int register() {
+        Plugin valhalla = EnchantsSquared.getPlugin().getServer().getPluginManager().getPlugin("ValhallaMMO");
+        if (valhalla == null || !valhalla.isEnabled()) {
+            EnchantsSquared.logWarning("Cannot register native enchanting scalings: ValhallaMMO is not enabled");
+            return 0;
+        }
+
+        YamlConfiguration local = ConfigManager.getInstance()
+                .getConfig("config_native_enchanting.yml").get();
+        if (!local.getBoolean("native_scalings_enabled", true)) return 0;
+
+        File enchantingFile = new File(valhalla.getDataFolder(), "skills/enchanting.yml");
+        YamlConfiguration valhallaConfig = enchantingFile.exists()
+                ? YamlConfiguration.loadConfiguration(enchantingFile) : new YamlConfiguration();
+
+        ConfigurationSection scalingDefinitions = local.getConfigurationSection("native_scalings");
+        if (scalingDefinitions == null) return 0;
+        int count = 0;
+        Set<String> warned = new HashSet<>();
+
+        for (String id : scalingDefinitions.getKeys(false)) {
+            NamespacedKey key = NamespacedKey.fromString("enchantssquared:" + id);
+            if (key == null) continue;
+            Enchantment enchantment = Registry.ENCHANTMENT.get(key);
+            if (enchantment == null) {
+                if (warned.add(id)) EnchantsSquared.logWarning("Native scaling skipped (unregistered enchantment): " + key);
+                continue;
+            }
+            String pluginFormula = scalingDefinitions.getString(id);
+            String externalFormula = valhallaConfig.getString("scalings.enchantssquared:" + id);
+            if (externalFormula == null) {
+                externalFormula = valhallaConfig.getString("scalings." + id);
+            }
+            String formula = externalFormula != null && !externalFormula.isBlank()
+                    ? externalFormula : pluginFormula;
+            if (formula == null || formula.isBlank()) continue;
+            try {
+                Scaling scaling = Scaling.fromString(formula, null);
+                EnchantingItemPropertyManager.registerScaling(enchantment, scaling);
+                count++;
+            } catch (RuntimeException ex) {
+                EnchantsSquared.logWarning("Invalid native ValhallaMMO scaling " + key + ": " + ex.getMessage());
+            }
+        }
+
+        EnchantsSquared.logInfo("Registered " + count +
+                " native enchantment scaling formulas with ValhallaMMO."
+                + " Override them in skills/enchanting.yml under quoted enchantssquared:<id> keys.");
+        return count;
+    }
+}
