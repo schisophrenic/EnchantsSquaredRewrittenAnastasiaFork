@@ -13,7 +13,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * Connects Paper's real custom enchantments to ValhallaMMO's public
@@ -47,11 +49,26 @@ public final class NativeValhallaScalingBridge {
                 ? YamlConfiguration.loadConfiguration(enchantingFile) : new YamlConfiguration();
 
         ConfigurationSection scalingDefinitions = local.getConfigurationSection("native_scalings");
-        if (scalingDefinitions == null) return 0;
+        // The user's previously installed config_native_enchanting.yml does not
+        // yet contain native_scalings. Discover the new registry tiers directly
+        // from config_native_enchants.yml, so updating the JAR is sufficient.
+        Set<String> scalingIds = new LinkedHashSet<>();
+        if (scalingDefinitions != null) scalingIds.addAll(scalingDefinitions.getKeys(false));
+        YamlConfiguration nativeDefinitions = ConfigManager.getInstance()
+                .getConfig("config_native_enchants.yml").get();
+        ConfigurationSection families = nativeDefinitions.getConfigurationSection("tier_families");
+        if (families != null) for (String family : families.getKeys(false)) {
+            for (Map<?, ?> tier : nativeDefinitions.getMapList("tier_families." + family + ".tiers")) {
+                Object key = tier.get("enchantment");
+                if (key instanceof String id && id.startsWith("enchantssquared:")) {
+                    scalingIds.add(id.substring("enchantssquared:".length()));
+                }
+            }
+        }
+
         int count = 0;
         Set<String> warned = new HashSet<>();
-
-        for (String id : scalingDefinitions.getKeys(false)) {
+        for (String id : scalingIds) {
             NamespacedKey key = NamespacedKey.fromString("enchantssquared:" + id);
             if (key == null) continue;
             Enchantment enchantment = Registry.ENCHANTMENT.get(key);
@@ -59,14 +76,16 @@ public final class NativeValhallaScalingBridge {
                 if (warned.add(id)) EnchantsSquared.logWarning("Native scaling skipped (unregistered enchantment): " + key);
                 continue;
             }
-            String pluginFormula = scalingDefinitions.getString(id);
+            String pluginFormula = scalingDefinitions == null ? null : scalingDefinitions.getString(id);
             String externalFormula = valhallaConfig.getString("scalings.enchantssquared:" + id);
             if (externalFormula == null) {
                 externalFormula = valhallaConfig.getString("scalings." + id);
             }
             String formula = externalFormula != null && !externalFormula.isBlank()
                     ? externalFormula : pluginFormula;
-            if (formula == null || formula.isBlank()) continue;
+            if (formula == null || formula.isBlank()) {
+                formula = "(1/100) * %rating%,ADD_ON_DEFAULT,0,50";
+            }
             try {
                 Scaling scaling = Scaling.fromString(formula, null);
                 EnchantingItemPropertyManager.registerScaling(enchantment, scaling);
