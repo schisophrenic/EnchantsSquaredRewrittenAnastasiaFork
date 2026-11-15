@@ -235,6 +235,33 @@ enchantments:
       base: 3
       per_level: 0.5
 
+  # Example special effect from the supplied So Many Enchantments mod.
+  # Approximate starter effect; tune chances/durations to suit server balance.
+  envenomed:
+    enabled: true
+    display_name: Envenomed
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 3
+    min_cost_base: 12
+    min_cost_per_level: 8
+    max_cost_base: 40
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    effect:
+      handler: on_hit_potion
+      chance: 0.15
+      effects:
+        - type: POISON
+          duration_ticks: 60
+          amplifier: 0
+        - type: WITHER
+          duration_ticks: 40
+          amplifier: 0
+
 # A family is rolled from its vanilla base, then becomes the highest eligible tier.
 # NG stage is checked using permanent ValhallaMMO perk IDs, NOT merely quality.
 # A branch perk is also required. This example binds all three offensive families
@@ -371,4 +398,14 @@ tier_families:
 #     chance: 0.10
 #     fixed_level: 1
 #
-perk_enchantments: {}
+perk_enchantments:
+  envenomed:
+    enabled: true
+    enchantment: enchantssquared:envenomed
+    required_perks: [enchanting_perk_poison]
+    minimum_ng: 2
+    minimum_enchanting_quality: 850
+    chance: 0.10
+    fixed_level: 1
+    # Increases enchantment level by one for every +150 quality above 850.
+    quality_per_level: 150
