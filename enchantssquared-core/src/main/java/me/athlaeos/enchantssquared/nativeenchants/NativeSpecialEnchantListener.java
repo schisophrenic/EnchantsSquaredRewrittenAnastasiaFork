@@ -94,8 +94,8 @@ public final class NativeSpecialEnchantListener implements Listener {
         }
 
         int splitLevel = level(event.getBow(), splitshot);
-        if (splitLevel < 1 || !(event.getProjectile() instanceof Arrow original)
-                || !(event.getEntity() instanceof LivingEntity shooter)) return;
+        if (splitLevel < 1 || !(event.getProjectile() instanceof Arrow original)) return;
+        LivingEntity shooter = event.getEntity();
         int max = Math.max(0, config.getInt("enchantments.splitshot.max_secondary_arrows", 12));
         int count = Math.min(max, splitLevel); // VI+ gives more arrows than III.
         if (count < 1) return;
