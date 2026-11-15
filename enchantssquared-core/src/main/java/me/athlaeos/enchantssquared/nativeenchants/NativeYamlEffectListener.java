@@ -51,7 +51,7 @@ public final class NativeYamlEffectListener implements Listener {
             ConfigurationSection effect = def.getConfigurationSection("effect");
             if (effect == null) continue;
             String handler = effect.getString("handler", "none");
-            if (!handlers.containsKey(handler)) continue;
+            if (handler.equals("none")) continue;
             Enchantment enchantment = Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id));
             // A missing enchantment means the datapack has not been loaded yet.
             if (enchantment != null) registered.put(enchantment, new BoundEffect(handler, effect));
@@ -72,7 +72,8 @@ public final class NativeYamlEffectListener implements Listener {
             int level = weapon.getEnchantmentLevel(entry.getKey());
             if (level <= 0) continue;
             BoundEffect effect = entry.getValue();
-            handlers.get(effect.handler()).apply(event, level, effect.definition());
+            NativeEffectHandler handler = handlers.get(effect.handler());
+            if (handler != null) handler.apply(event, level, effect.definition());
         }
     }
 
