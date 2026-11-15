@@ -9,7 +9,8 @@ import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
-import me.athlaeos.enchantssquared.nativeenchants.NativeYamlRegistryGenerator;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
 import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
@@ -20,6 +21,9 @@ import me.athlaeos.enchantssquared.managers.RegularIntervalEnchantmentClockManag
 import me.athlaeos.enchantssquared.menus.MenuListener;
 import me.athlaeos.enchantssquared.utility.ChatUtils;
 import me.athlaeos.enchantssquared.version.NMS;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Registry;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -28,6 +32,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -109,8 +115,21 @@ public final class EnchantsSquared extends JavaPlugin {
         }
 
         grindstonesEnabled = ConfigManager.getInstance().getConfig("config.yml").get().getBoolean("allow_grindstone_removal", true);
-        CommandManager.getInstance();
-        Objects.requireNonNull(getCommand("nativeenchants")).setExecutor(new NativeEnchantsCommand(this));
+        CommandManager legacyCommands = CommandManager.getInstance();
+        registerCommand("enchantssquared", "EnchantsSquared commands", List.of("es"), new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                legacyCommands.onCommand(source.getSender(), null, "es", args);
+            }
+            @Override
+            public Collection<String> suggest(CommandSourceStack source, String[] args) {
+                List<String> suggestions = legacyCommands.onTabComplete(source.getSender(), null, "es", args);
+                return suggestions == null ? List.of() : suggestions;
+            }
+        });
+        NativeEnchantsCommand nativeCommands = new NativeEnchantsCommand(this);
+        registerCommand("nativeenchants", "Native enchantment registry status", List.of("esnative"), (source, args) ->
+                nativeCommands.execute(source.getSender(), args));
 
         if (Version.currentVersionOrNewerThan(Version.MINECRAFT_1_14) && grindstonesEnabled) grindstoneListener = registerListener(new GrindstoneListener());
         anvilListener = registerListener(new AnvilListener(), "disable_anvil");
@@ -154,14 +173,22 @@ public final class EnchantsSquared extends JavaPlugin {
             // Existing vanilla perks/quality calculations run before tier substitution.
             registerListener(new NativeEnchantingPerkBridge());
         }
-        NativeYamlRegistryGenerator nativeRegistry = new NativeYamlRegistryGenerator(this);
-        nativeRegistry.generate();
-        registerListener(new NativeYamlEffectListener(nativeRegistry.config()));
+        // The native enchantments have already been registered in Paper's
+        // ENCHANTMENT.compose lifecycle event, before worlds load.
+        YamlConfiguration nativeConfig = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
+        registerListener(new NativeYamlEffectListener(nativeConfig));
         if (valhallaHooked) {
-            // Register AFTER the native perk bridge: the enhanced vanilla level is
-            // carried into the highest eligible YAML tier without double boosting.
-            registerListener(new ValhallaTierEnchantingListener(nativeRegistry.config()));
+            registerListener(new ValhallaTierEnchantingListener(nativeConfig));
         }
+        int nativeCount = 0;
+        var nativeDefs = nativeConfig.getConfigurationSection("enchantments");
+        if (nativeDefs != null) {
+            for (String id : nativeDefs.getKeys(false)) {
+                if (!nativeDefs.getBoolean(id + ".enabled", true)) continue;
+                if (Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id)) != null) nativeCount++;
+            }
+        }
+        logInfo("Native enchantments found in registry: " + nativeCount + " (Paper Java bootstrap; no datapack).");
     }
 
     public static NMS getNms() {
