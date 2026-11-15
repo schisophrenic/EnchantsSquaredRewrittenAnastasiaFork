@@ -1,3 +1,31 @@
+# Native Paper registry ↔ ValhallaMMO Enchanting integration
+#
+# These enchants are actual Bukkit/Paper Enchantment instances. ValhallaMMO
+# only reads a hard-coded set of vanilla IDs from skills/enchanting.yml, so
+# EnchantsSquared explicitly registers the following formulas at onEnable.
+# They may be overridden in plugins/ValhallaMMO/skills/enchanting.yml under
+# quoted scalings."enchantssquared:lesser_sharpness" etc. No Valhalla jar edit.
+#
+# The tier selector passes normalized quality to getScaledLevel:
+#   normalized_rating = (effective_quality - band_start_quality) * 100 / quality_per_level
+# This keeps the approved 650/855/1090/1295/1520 quality gates authoritative.
+# The existing level bonuses (e.g. enchanting_levelbonussharpness_add and
+# enchanting_levelbonusgenericoffensive_add) are inherited from the related
+# vanilla enchantment and translated by a conservative factor below.
+#
+native_scalings_enabled: true
+tier_perk_level_multiplier: 0.2
+native_scalings:
+  lesser_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  lesser_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  lesser_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  advanced_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  advanced_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  advanced_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  supreme_sharpness: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  supreme_smite: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+  supreme_bane_of_arthropods: (1/100) * %rating%,ADD_ON_DEFAULT,0,50
+
 # Optional translation of ValhallaMMO enchanting perk bonuses to real custom enchantments
 enabled: true
 replacements:
@@ -8,7 +36,25 @@ replacements:
   perforating: sharpness
   plating: protection
   beheading: looting
+  lesser_sharpness: sharpness
+  lesser_smite: smite
+  lesser_bane_of_arthropods: bane_of_arthropods
+  advanced_sharpness: sharpness
+  advanced_smite: smite
+  advanced_bane_of_arthropods: bane_of_arthropods
+  supreme_sharpness: sharpness
+  supreme_smite: smite
+  supreme_bane_of_arthropods: bane_of_arthropods
 categories:
+  lesser_sharpness: OFFENSIVE
+  lesser_smite: OFFENSIVE
+  lesser_bane_of_arthropods: OFFENSIVE
+  advanced_sharpness: OFFENSIVE
+  advanced_smite: OFFENSIVE
+  advanced_bane_of_arthropods: OFFENSIVE
+  supreme_sharpness: OFFENSIVE
+  supreme_smite: OFFENSIVE
+  supreme_bane_of_arthropods: OFFENSIVE
   excavation: UTILITY
   rejuvenation: UTILITY
   kinship: UTILITY
