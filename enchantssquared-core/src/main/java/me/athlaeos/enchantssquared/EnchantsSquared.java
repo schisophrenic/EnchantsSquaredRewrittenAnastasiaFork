@@ -15,6 +15,11 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
 import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantAliases;
+import me.athlaeos.enchantssquared.nativeenchants.NativeAttributeEnchantEngine;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSpecialEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantLootListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantConfigReference;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaAttributeBridge;
 import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
@@ -46,6 +51,7 @@ public final class EnchantsSquared extends JavaPlugin {
     private static EnchantsSquared plugin = null;
     private static boolean trinketsHooked = false;
     private static boolean valhallaHooked = false;
+    private NativeAttributeEnchantEngine nativeAttributeEngine;
     private static boolean worldGuardHooked = false;
     private static boolean mcMMOHooked = false;
     private static boolean jobsHooked = false;
@@ -189,6 +195,20 @@ public final class EnchantsSquared extends JavaPlugin {
         registerListener(new NativeYamlEffectListener(nativeConfig));
         registerListener(new NativeRangedEnchantListener());
         registerListener(new NativeProtectionEnchantListener(nativeConfig));
+        registerListener(new NativeSpecialEnchantListener(nativeConfig));
+        registerListener(new NativeEnchantLootListener(this, nativeConfig));
+        nativeAttributeEngine = new NativeAttributeEnchantEngine(this, nativeConfig);
+        if (valhallaHooked) {
+            NativeValhallaAttributeBridge.register(nativeAttributeEngine);
+        }
+        if (nativeAttributeEngine.isEnabled()) {
+            getServer().getScheduler().runTaskTimer(this, nativeAttributeEngine, 1L, 20L);
+            // AIR_DRAG is an explicitly configured pseudo-attribute. This
+            // routine does nothing unless an equipped enchant grants it.
+            getServer().getScheduler().runTaskTimer(this,
+                    nativeAttributeEngine::tickAirDrag, 1L, 1L);
+        }
+        NativeEnchantConfigReference.refresh(this);
         if (valhallaHooked) {
             registerListener(new ValhallaTierEnchantingListener(nativeConfig));
         }
@@ -227,6 +247,7 @@ public final class EnchantsSquared extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (nativeAttributeEngine != null) nativeAttributeEngine.clean();
         // Plugin shutdown logic
         for (CustomEnchant e : CustomEnchantManager.getInstance().getAllEnchants().values()){
             if (e instanceof AttributeEnchantment){
