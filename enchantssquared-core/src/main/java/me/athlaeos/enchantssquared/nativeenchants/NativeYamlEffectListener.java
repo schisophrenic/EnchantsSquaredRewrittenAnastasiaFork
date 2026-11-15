@@ -89,6 +89,16 @@ public final class NativeYamlEffectListener implements Listener {
             ConfigurationSection effect = def.getConfigurationSection("effect");
             if (effect == null) continue;
             String handler = effect.getString("handler", "none");
+            // Previously installed native configs may still define an old
+            // generic melee_flat_bonus handler. Always use the correct
+            // Minecraft vanilla combat behavior for our tier families.
+            if (id.matches("(lesser|advanced|supreme)_sharpness")) {
+                handler = "vanilla_sharpness";
+            } else if (id.matches("(lesser|advanced|supreme)_smite")) {
+                handler = "vanilla_smite";
+            } else if (id.matches("(lesser|advanced|supreme)_bane_of_arthropods")) {
+                handler = "vanilla_bane_of_arthropods";
+            }
             if (handler.equals("none")) continue;
             Enchantment enchantment = Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id));
             // The registry entry must have been registered during Paper bootstrap.
