@@ -1114,6 +1114,211 @@ enchantments:
     effect:
       handler: none
 
+
+  # Configurable standalone enchants and approved mod additions.
+  disorientating_blade:
+    enabled: true
+    display_name: Disorientating Blade
+    enchant_type: weapon
+    rarity: epic
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    max_level: 3
+    weight: 2
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.015
+      villager_trade: 0.01
+      fishing: 0.005
+      structure_chest: 0.025
+      mob_drop: 0.008
+    effect:
+      handler: disorientating_blade
+
+  evasion:
+    enabled: true
+    display_name: Evasion
+    enchant_type: armor
+    rarity: rare
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    max_level: 4
+    weight: 5
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.02
+      villager_trade: 0.015
+      fishing: 0.01
+      structure_chest: 0.035
+      mob_drop: 0.012
+    effect:
+      handler: evasion
+    dodge_chance_per_level: 0.04
+    maximum_dodge_chance: 0.50
+
+  splitshot:
+    enabled: true
+    display_name: Splitshot
+    enchant_type: bow
+    rarity: epic
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    max_level: 3
+    weight: 2
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.018
+      villager_trade: 0.01
+      fishing: 0.007
+      structure_chest: 0.035
+      mob_drop: 0.01
+    effect:
+      handler: splitshot
+    max_secondary_arrows: 12
+    secondary_damage_fraction: 0.35
+
+  strafe:
+    enabled: true
+    display_name: Strafe
+    enchant_type: bow
+    rarity: rare
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    max_level: 4
+    weight: 5
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.025
+      villager_trade: 0.025
+      fishing: 0.008
+      structure_chest: 0.025
+      mob_drop: 0.012
+    effect:
+      handler: strafe
+
+  rapid_shot:
+    enabled: true
+    display_name: Rapid Shot
+    enchant_type: bow
+    rarity: epic
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    max_level: 3
+    weight: 2
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0
+      villager_trade: 0.008
+      fishing: 0.005
+      structure_chest: 0.02
+      mob_drop: 0.01
+    effect:
+      handler: none
+
+  graviton:
+    enabled: true
+    display_name: Graviton
+    enchant_type: armor
+    rarity: rare
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    max_level: 10
+    weight: 5
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.03
+      villager_trade: 0.015
+      fishing: 0.006
+      structure_chest: 0.03
+      mob_drop: 0.01
+    effect:
+      handler: none
+    # Vanilla Attribute.GENERIC_GRAVITY is resolved from GRAVITY.
+    # Base and increment apply to the REAL item enchant level, even > X.
+    attribute:
+      GRAVITY: 0.01
+    scale_per_level: 0.01
+    attribute_operation: ADD_NUMBER
+    # Optional ValhallaMMO example: add an explicit prefixed stat:
+    # attribute:
+    #   "VALHALLA:MAGIC_RESISTANCE": 0.02
+
+  physical_protection:
+    enabled: false
+    display_name: Physical Protection
+    enchant_type: armor
+    rarity: epic
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    max_level: 4
+    weight: 2
+    min_cost_base: 12
+    min_cost_per_level: 10
+    max_cost_base: 45
+    max_cost_per_level: 10
+    anvil_cost: 4
+    # Custom acquisition events use this chance, independently per item.
+    # Native enchantment table tag stays false to enforce chance+rarity.
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0
+      villager_trade: 0
+      fishing: 0
+      structure_chest: 0
+      mob_drop: 0
+    effect:
+      handler: none
+
+
 # A family is selected from its vanilla enchant, using NG/perk/quality gates.
 # The player must have enchanting_perk_sharpnesses for these offensive tiers.
 #
