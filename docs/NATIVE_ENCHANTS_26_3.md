@@ -1,174 +1,100 @@
-# YAML-defined native enchantments, Purpur 26.3
+# EnchantsSquared direct Java registry enchantments — Purpur 26.3
 
-This is a **draft implementation**. No successful full Maven compile or live server
-test has been performed. Use a staging world and backup inventories.
+## Corrected architecture
 
-## Goal
+Minecraft 26.3 supports registering new **real** enchantments directly from
+a **Paper plugin bootstrapper** using the registry compose lifecycle event.
+The fork now has:
+- a \`paper-plugin.yml\` descriptor with a bootstrapper and optional dependency metadata
+- \`NativeEnchantmentBootstrap.java\` registering actual enchantment keys
+  using \`RegistryEvents.ENCHANTMENT.compose()\`
+- Java registration of enchanting-table/trading tags via
+  \`LifecycleEvents.TAGS.postFlatten(RegistryKey.ENCHANTMENT)\`
+- \`config_native_enchants.yml\` holding the native enchantment definitions
+- \`ValhallaTierEnchantingListener.java\` for per-player NG/quality/perk upgrades
+- \`NativeYamlEffectListener.java\` for the sample melee and status-effect handlers
 
-Every entry under config_native_enchants.yml -> enchantments becomes a **real
-Minecraft registry enchantment**, with a stable ID like
-enchantssquared:lesser_sharpness.
+**No external or generated datapack** is used. The obsolete generator and
+\`native-datapack-26.3\` folder were removed from the branch.
 
-The Java server plugin handles gameplay behavior, rather than copying effects
-into the datapack and risking duplicate damage or conflicting game logic.
+## Installing and testing
 
-## What to edit
+This is a **compiled staging build**, not yet tested live on Purpur 26.3.
 
-File: plugins/EnchantsSquared/config_native_enchants.yml
+1. Back up world and player inventories and remove the old plugin JAR.
+2. Install the new \`EnchantsSquared_JavaRegistry_NG_Test.jar\` from GitHub Actions.
+3. Delete or disable any old \`EnchantsSquaredNativeAuto\` datapack that may
+   remain from the *previous* test attempt.
+4. Fully restart the server once. On first startup, the plugin bootstrapper
+   copies \`config_native_enchants.yml\` into \`plugins/EnchantsSquared/\`
+   and immediately registers the enchantments from it.
+5. Run \`/esnative status\` or \`/esnative list\` as OP to verify the registry.
+   You should see **10 configured native enchantments** (9 tiers, Envenomed).
+6. With a test sword in hand, use:
+   \`/enchant @s enchantssquared:lesser_sharpness 1\`
+   Then verify its lore/registry effect and repeat with Advanced/Supreme levels.
+7. Test a normal enchanting table using the real ValhallaMMO perks and quality.
+   Confirm the preview and final roll agree, and verify vanilla Sharpness
+   remains available without the offensive perk.
+8. Test ancient PDC EnchantsSquared items, EnchantsSquared /es commands, anvils,
+   grinding, item upgrades and ValhallaEquipment interactions. Existing
+   EnchantsSquared enchanting rolls are deliberately preserved.
 
-- enchantments.<key>.display_name: the name shown on an enchanted item
-- supported_items: vanilla item IDs or Minecraft item tags
-- max_level, weight, min/max costs, anvil_cost, slots: vanilla enchant metadata
-- table_obtainable: true for independent enchantments, false for gated tiers
-- exclusive_set: other enchantment IDs that must not combine
-- effect.handler: Java implementation name; effect.base/per_level: its parameters
-- tier_families.<family>.base: vanilla or custom enchant to replace
-- tiers[].enchantment: namespaced replacement enchant
-- tiers[].minimum_enchanting_quality: effective ValhallaMMO quality threshold
-- tiers[].required_perks: ALL named perks must be unlocked
+After changing or adding any \`enchantments:\` registry YAML entry, FULLY
+RESTART the server. The registry freezes before onEnable; neither /reload nor
+/esnative can register additional IDs in a running server.
 
-Currently supplied Java effect handlers:
+## Quality thresholds (the user's +100 adjustment)
 
-- melee_flat_bonus: attack event damage += base + (level - 1) * per_level
-- melee_multiplier: attack event damage *= 1 + base + (level - 1) * per_level
-- on_hit_potion: chance to apply configurable potion effects on melee hit
-- none: register-only; add a Java handler for a special ability
+| Current enchanting NG | Tier | Allowed levels | Starting quality | Quality reaching level cap |
+|---|---|---|---|---|
+| 1 | Lesser | I-X | 650 | 830 |
+| 2 | Lesser | XI-XXX | 855 | 1083 |
+| 3 | Advanced | I-X | 1090 | 1288 |
+| 4 | Advanced | XI-XXX | 1295 | 1504 |
+| 5 | Supreme | I-X | 1520 | 1871 |
 
-These formulae are starter implementations, not copied from the 1.12.2 mod.
-New complex effects can be implemented as additional Java handlers.
+NG stage is a hard ceiling; effective quality is computed from
+\`ENCHANTING_QUALITY * (1 + ENCHANTING_FRACTION_QUALITY)\`.
+The actual enchanted level in an eligible band is
+\`min(cap, first_level + floor((quality - quality_at_first_level) / quality_per_level))\`.
+If the player hasn't reached the newest band's quality threshold, the previous
+eligible tier remains available.
 
-## Quality calculation from the user's actual ValhallaMMO configuration
+All three tier families are tied to ValhallaMMO's existing
+\`enchanting_perk_sharpnesses\`: Sharpness, Smite and Bane of Arthropods.
+Their custom native levels are 30 for Lesser and Advanced, 10 for Supreme.
 
-The server's enchanting_progression.yml gives +1 enchanting skill per level.
-Non-NG core quality perks add 50 + 50 + 80 + 100 + 150 = +430.
-Further NG-level quality perks contribute:
-- NG1 at level 125: +88 +110 = 753 total effective quality
-- NG2 at level 150: +115 +92 = 985
-- NG3 at level 175: +180 = 1190
-- NG4 at level 200: +195 = 1410
-- NG5 at level 200: +225 +150 = 1785
+The perk groups also include defensive, utility, elemental fire/freezing/poison,
+Arcane, Sovereign and Spellforged. Envenomed is a Java status-effect test
+enchantment gated by \`enchanting_perk_poison\`, NG2 and enchanting Q850.
 
-Pre-NG1 at level 100: 100 +430 = 530.
+## How YAML defines new native enchants
 
-**Assumptions:** This assumes every relevant quality perk was bought,
-and no fractional quality multiplier, other equipment bonuses or Sovereign
-specialization (+50) were applied. Values are calibrated progress benchmarks,
-not minimum or mandatory quality for that NG stage.
+Under \`enchantments:\` add a unique key with display_name, supported_items,
+slots, weight, max_level, min/max costs, anvil_cost and effect.handler.
 
-The uploaded enchanting.yml uses Sharpness/Smite/Bane scaling of
-`0.02 * quality - 2, ADD_ON_DEFAULT, 1,45`. These are the *vanilla*
-scaling parameters; custom enchantment levels instead follow the YAML NG
-quality progression, independent of original vanilla Sharpness level.
+\`supported_items\` currently accepts **one vanilla #minecraft:item_tag**
+(e.g. \`#minecraft:enchantable/weapon\`) OR a list of direct item IDs.
+Don't mix multiple tags/direct items in the same list for this test build.
+The \`table_obtainable\` and \`tradeable\` flags are read at bootstrap
+and tag membership is set in Java without any data files.
 
-## Current NG1–NG5 tier rules
+Native registry metadata does not by itself create gameplay effects.
+Special mod effects still need Java handlers, registered in the effect listener.
 
-Every opening threshold below is **100 above** the previous draft's
-threshold, as requested. Merely unlocking NG1–NG5 no longer gives the
-maximum enchantment level; the player must earn more effective quality.
+## Known limitations
 
-The `config_native_enchants.yml` file includes configurable
-`perk_groups` aliases for the approved offensive, defensive, elemental,
-magical, attributes, smithing and utility ValhallaMMO perk branches.
-
-
-| NG stage | Tier | Allowed native levels | Quality at first | Quality per +1 | Quality reaching cap |
-|---|---|---|---:|---:|---:|
-| 1 | Lesser | I–X | 650 | 20 | 830 |
-| 2 | Lesser | XI–XXX | 855 | 12 | 1083 |
-| 3 | Advanced | I–X | 1090 | 22 | 1288 |
-| 4 | Advanced | XI–XXX | 1295 | 11 | 1504 |
-| 5 | Supreme | I–X | 1520 | 39 | 1871 |
-
-The player's **NG level is a hard cap** regardless of enchanting quality.
-All three tier families (Sharpness, Smite, Bane of Arthropods) require
-`enchanting_perk_sharpnesses`, which already exists in the provided
-ValhallaMMO progression. NG checks use
-`enchanting_perk_ng1` through `enchanting_perk_ng5` from that same file.
-The plugin uses `ENCHANTING_QUALITY * (1 + ENCHANTING_FRACTION_QUALITY)`
-like ValhallaMMO. It uses the highest unlocked band whose minimum quality
-has been reached. If no band qualifies, it preserves the original vanilla
-enchantment. Every final roll removes the base and lower tiers before
-adding the chosen one.
-
-## Perk-only enchantments for non-tier mechanics
-
-The example `envenomed` is a **separate** custom enchantment:
-- It is a real registered enchantment with its own Java potion-effect handler.
-- It has no independent enchanting-table entry.
-- Enchanting can grant it as a bonus if the player has
-  the `elemental_poison` perk group (`enchanting_perk_poison`), has reached NG2 and quality >= 850.
-- Base chance: 10% per qualifying enchanting session; enchantment levels scale
-  +1 every 150 quality after 850, capped at the enchantment's maximum.
-- The Java handler currently applies poison and wither with configurable
-  durations and chance (starter values, not a verified 1.12.2 damage formula).
-
-The user-provided ValhallaMMO config already contains useful perk IDs:
-`enchanting_perk_sharpnesses`, `enchanting_perk_protections`,
-`enchanting_perk_offensive`, `enchanting_perk_defensive`,
-`enchanting_perk_utility`, `enchanting_perk_fire`,
-`enchanting_perk_freezing`, `enchanting_perk_poison`,
-`enchanting_perk_arcane`, `enchanting_perk_sovereign`,
-and `enchanting_perk_spellforged`.
-
-**No ValhallaMMO progression edit is required for these existing perk IDs.**
-When introducing a genuinely new perk with a new ID, it must be added to
-ValhallaMMO's progression and localization and tested for unlock behavior.
-
-This per-player substitution does not delete minecraft:sharpness from the global
-registry. Other players can still roll it, and previously enchanted items retain it.
-
-Tier enchantments are excluded from the *normal* enchanting table tag: they
-cannot independently appear before their required perks are unlocked.
-Independent perk-only enchantments are similarly granted through configured
-Java bonus rolls, not globally available table-tag entries.
-The vanilla enchanting table tag is extended with replace=false. Existing core
-EnchantsSquared enchants may still appear normally if their config marks
-them as obtainable.
-
-## Installation and lifecycle
-
-1. Build an updated plugin JAR from this branch after addressing compilation.
-2. Remove/disable any **old manually installed** native-datapack-26.3 pack from
-   the previous draft. Do not install BOTH static and generated packs.
-3. Start the server with the new plugin. It writes the generated datapack to
-   the first loaded world's datapacks/EnchantsSquaredNativeAuto folder.
-4. **Restart the entire server again**, then use /datapack list to verify the
-   pack loaded. Newly added registry IDs are not hot-reloaded by the plugin.
-5. Test /enchant @s enchantssquared:lesser_sharpness 1 on a supported item.
-6. Grant/remove ValhallaMMO perks and modify quality on a TEST PLAYER to verify
-   each enchanting-table preview and final result, including noneligible tiers.
-7. Test books, anvil combining, grindstones, old PDC items, vanilla compatibility,
-   scaled levels and collision with ValhallaEquipment item properties.
-
-After YAML changes, run **/esnative generate** as an administrator. Check
-the console for generation errors, then FULLY RESTART the server once for
-the registry to load the new files. If you do not run the command, the plugin
-generates the files on next startup, and you must restart again to activate
-the registry changes.
-
-## Scope and unresolved items
-
-- The 1.12.2 So Many Enchantments JAR includes 130 named enchantment entries.
-  This branch ports the tiered Sharpness **example**, not all of those effects.
-- Only simple melee effect handlers exist; all specialized 1.12.2 mechanics
-  need original Java implementations and balancing for ValhallaMMO.
-- The old /es listing, admin command and custom-loot paths are built around
-  existing Java CustomEnchant objects. YAML-only enchantments are native and
-  do not yet appear in every legacy /es interface.
-- The vanilla enchantment tag is global, whereas individual perk checks happen
-  in server events. Other plugins that explicitly grant enchants, loot tables,
-  and administrator commands may bypass perk eligibility unless separately gated.
-- Custom-item compatibility needs a test when Oraxen/ValhallaEquipment stores
-  equipment using a vanilla base item that differs from the listed item tags.
-- Existing native entries generated for old EnchantsSquared classes don't yet
-  translate all custom conflict rules or the original max_table_level.
-- /reload is not a supported replacement for a full registry-reload test.
-- This branch has not been validated against the exact Purpur 26.3 + premium
-  ValhallaMMO dependencies or on a live test server.
-
-## Source basis
-
-SoManyEnchantments-1.0.9-1.12.2.jar provided by the user: internal
-assets/somanyenchantments/lang/en_us.lang and mcmod.info provide enchantment
-names and metadata. The archive also includes an MIT license. No Java bytecode
-or audio/art assets from the mod have been copied into this implementation.
+- Native Java registry bootstrap is new; server runtime has not yet been tested.
+- The plugin now uses Paper plugin loading instead of legacy-only Bukkit
+  metadata, and /es plus /esnative use Paper command registration.
+- The old enchantment PDC system is left intact. A full migration of old PDC
+  enchantments to native entries is a separate task.
+- Original So Many Enchantments effects are NOT fully ported: only three
+  offensive tier families and an Envenomed prototype are present.
+- The sample Smite/Bane effects currently use generic bonus damage rather than
+  their intended mob-specific behavior; rebalance before production.
+- The tier substitution and perk-only bonus mechanics run in enchanting
+  events; other ways of granting enchantments may bypass the player perk gates.
+- Do not install this on a live server before checking the startup log,
+  existing plugin dependencies, command behavior and registry results.
