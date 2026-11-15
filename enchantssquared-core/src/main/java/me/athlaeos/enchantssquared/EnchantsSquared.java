@@ -9,6 +9,7 @@ import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaScalingBridge;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
@@ -170,6 +171,9 @@ public final class EnchantsSquared extends JavaPlugin {
         RegularIntervalEnchantmentClockManager.startClock();
         if (valhallaHooked) {
             ValhallaHook.registerValhallaEnchantments();
+            // Native enchantments now exist in Paper's registry. Register their
+            // scalings with ValhallaMMO before any enchanting events can fire.
+            NativeValhallaScalingBridge.register();
             // Existing vanilla perks/quality calculations run before tier substitution.
             registerListener(new NativeEnchantingPerkBridge());
         }
