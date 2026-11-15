@@ -48,11 +48,11 @@ RESTART the server. The registry freezes before onEnable; neither /reload nor
 
 | Current enchanting NG | Tier | Allowed levels | Starting quality | Quality reaching level cap |
 |---|---|---|---|---|
-| 1 | Lesser | I-X | 650 | 830 |
-| 2 | Lesser | XI-XXX | 855 | 1083 |
-| 3 | Advanced | I-X | 1090 | 1288 |
-| 4 | Advanced | XI-XXX | 1295 | 1504 |
-| 5 | Supreme | I-X | 1520 | 1871 |
+| 1 | Lesser | I-III | 650 | 830 |
+| 2 | Lesser | IV-V | 855 | 1083 |
+| 3 | Advanced | I-III | 1090 | 1288 |
+| 4 | Advanced | IV-V | 1295 | 1504 |
+| 5 | Supreme | I-V | 1520 | 1872 |
 
 NG stage is a hard ceiling; effective quality is computed from
 \`ENCHANTING_QUALITY * (1 + ENCHANTING_FRACTION_QUALITY)\`.
@@ -63,7 +63,46 @@ eligible tier remains available.
 
 All three tier families are tied to ValhallaMMO's existing
 \`enchanting_perk_sharpnesses\`: Sharpness, Smite and Bane of Arthropods.
-Their custom native levels are 30 for Lesser and Advanced, 10 for Supreme.
+Every tier has the same maximum level as its vanilla parent: **V**. The game registry enforces this limit, even for previously-installed YAML that still says 30/50.
+
+## Native ValhallaMMO scaling and original effects
+
+The EnchantsSquared scaling bridge calls ValhallaMMO's
+`EnchantingItemPropertyManager.registerScaling(...)` for all nine native
+tier keys. This is necessary because ValhallaMMO normally loads only a
+hardcoded list of vanilla keys from its enchanting.yml.
+Additional per-enchantment formulas can be configured under
+`config_native_enchanting.yml` or as quoted `scalings` keys in
+`plugins/ValhallaMMO/skills/enchanting.yml`.
+
+Example:
+```yaml
+scalings:
+  sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,5
+  smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,5
+  bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,5
+  'enchantssquared:lesser_sharpness': (1/100) * %rating%,ADD_ON_DEFAULT,0,5
+```
+
+The bridge forcibly bounds the registered custom scalings to V,
+while the enchanting-table listener caps even post-perk vanilla
+and native enchantment rolls at V. Family-specific + generic offensive
+Valhalla perks translate to a moderate effective-quality boost:
+default `tier_perk_quality_per_bonus: 5.0`. This avoids granting
+the highest enchantment level instantly upon NG unlock.
+
+The tier effects now follow the Java Edition vanilla family:
+- Sharpness: +0.5 * level + 0.5 melee damage to any target.
+- Smite: +2.5 * level melee damage against mobs sensitive to Smite.
+- Bane of Arthropods: +2.5 * level melee damage to arthropods, with
+  Slowness IV for a vanilla-like random duration.
+There is no arbitrary extra damage multiplier for higher named tiers yet.
+
+Both old server config formats are handled at runtime: bootstrap enforces
+native V regardless of the saved registry YAML; the listener converts
+obsolete NG 1-10 / 11-30 brackets into the new compact V brackets.
+The plugin does not overwrite server YAML, so admins can replace
+their own files when convenient.
 
 The perk groups also include defensive, utility, elemental fire/freezing/poison,
 Arcane, Sovereign and Spellforged. Envenomed is a Java status-effect test
