@@ -73,9 +73,11 @@ them as obtainable.
 7. Test books, anvil combining, grindstones, old PDC items, vanilla compatibility,
    scaled levels and collision with ValhallaEquipment item properties.
 
-After YAML changes: restart to regenerate files, **then restart again** for
-the Minecraft registry to use those new files. If the plugin reports that no
-files changed, another restart is not required for registry updates.
+After YAML changes, run **/esnative generate** as an administrator. Check
+the console for generation errors, then FULLY RESTART the server once for
+the registry to load the new files. If you do not run the command, the plugin
+generates the files on next startup, and you must restart again to activate
+the registry changes.
 
 ## Scope and unresolved items
 
