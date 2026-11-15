@@ -65,6 +65,12 @@ public final class NativeValhallaScalingBridge {
             }
         }
 
+        // Base Magic Protection is independently rollable from the table.
+        // Its NG tiers are discovered above, but its base ID needs scaling too.
+        if (Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", "magic_protection")) != null) {
+            scalingIds.add("magic_protection");
+        }
+
         int count = 0;
         Set<String> warned = new HashSet<>();
         for (String id : scalingIds) {
@@ -84,13 +90,25 @@ public final class NativeValhallaScalingBridge {
             // Respect the same formula as the corresponding vanilla enchant:
             // e.g. (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45.
             // The upper bound limits the bonus, NOT the total level.
-            String vanillaId = id.endsWith("_bane_of_arthropods") ? "bane_of_arthropods"
-                    : id.endsWith("_smite") ? "smite"
-                    : id.endsWith("_sharpness") ? "sharpness" : null;
+            String vanillaId = null;
+            if (id.equals("magic_protection")) {
+                vanillaId = "protection";
+            } else if (families != null) {
+                for (String family : families.getKeys(false)) {
+                    for (String tier : new String[]{"lesser_", "advanced_", "supreme_"}) {
+                        if (id.equals(tier + family)) {
+                            vanillaId = family.equals("magic_protection") ? "protection" : family;
+                            break;
+                        }
+                    }
+                    if (vanillaId != null) break;
+                }
+            }
             String vanillaFormula = vanillaId == null ? null
                     : valhallaConfig.getString("scalings." + vanillaId);
             if (vanillaFormula == null || vanillaFormula.isBlank()) {
-                vanillaFormula = "(2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45";
+                // Flame has maxLevel I in vanilla, so it is not amplified.
+                vanillaFormula = "0,ADD_ON_DEFAULT,0,1";
             }
             String formula = externalFormula != null && !externalFormula.isBlank()
                     ? externalFormula : pluginFormula;
