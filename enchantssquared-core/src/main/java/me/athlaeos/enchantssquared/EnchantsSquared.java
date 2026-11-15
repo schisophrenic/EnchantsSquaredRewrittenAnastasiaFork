@@ -110,6 +110,10 @@ public final class EnchantsSquared extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
+        getLogger().warning("========== BETA TEST BUILD — DO NOT USE ON PRODUCTION SERVERS ==========");
+        getLogger().warning("Back up worlds, player data, inventories and all plugin configurations BEFORE testing.");
+        getLogger().warning("Native enchantments, ValhallaMMO scaling, loot rolls and smithing integration require in-game verification.");
+        getLogger().warning("========================================================================");
         if (!setupNMS()){
             logSevere("This version of Minecraft is not compatible with EnchantsSquared. Sorry!");
             getServer().getPluginManager().disablePlugin(this);
