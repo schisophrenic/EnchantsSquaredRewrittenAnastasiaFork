@@ -18,6 +18,9 @@ settings:
   # Existing EnchantsSquared PDC effects remain enabled independently.
   # Only this enchantments: section is registered as new native entries.
   maximum_bonus_enchantments: 1
+  # Per-family switch: tier_families.<family>.enabled: false
+  # Keeps vanilla base enchanting + ValhallaMMO amplification; leaves the
+  # Paper tier registry entries dormant so previously enchanted gear still works.
   # Magic Protection reduces elemental hits by 3% per level per armor piece.
   # The sum of all protection enchantment-based mitigation stays <90% (max 85%).
   magic_protection_percent_per_level: 0.03
@@ -1112,6 +1115,7 @@ enchantments:
 # server configs are ignored; they no longer cap the scaled level.
 tier_families:
   sharpness:
+    enabled: true # false -> keep ordinary sharpness ValhallaMMO scaling, no tiers
     base: minecraft:sharpness
     required_perks:
       - enchanting_perk_sharpnesses
@@ -1133,6 +1137,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   smite:
+    enabled: true # false -> keep ordinary smite ValhallaMMO scaling, no tiers
     base: minecraft:smite
     required_perks:
       - enchanting_perk_sharpnesses
@@ -1154,6 +1159,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   bane_of_arthropods:
+    enabled: true # false -> keep ordinary bane_of_arthropods ValhallaMMO scaling, no tiers
     base: minecraft:bane_of_arthropods
     required_perks:
       - enchanting_perk_sharpnesses
@@ -1176,6 +1182,7 @@ tier_families:
             quality_at_first_level: 1520
 
   power:
+    enabled: true # false -> keep ordinary power ValhallaMMO scaling, no tiers
     base: minecraft:power
     required_perks:
       - enchanting_perk_sharpnesses
@@ -1197,6 +1204,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   punch:
+    enabled: true # false -> keep ordinary punch ValhallaMMO scaling, no tiers
     base: minecraft:punch
     required_perks:
       - enchanting_perk_sharpnesses
@@ -1218,6 +1226,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   flame:
+    enabled: true # false -> keep ordinary flame ValhallaMMO scaling, no tiers
     base: minecraft:flame
     required_perks:
       - enchanting_perk_fire
@@ -1239,6 +1248,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   fire_aspect:
+    enabled: true # false -> keep ordinary fire_aspect ValhallaMMO scaling, no tiers
     base: minecraft:fire_aspect
     required_perks:
       - enchanting_perk_fire
@@ -1260,6 +1270,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   protection:
+    enabled: true # false -> keep ordinary protection ValhallaMMO scaling, no tiers
     base: minecraft:protection
     required_perks:
       - enchanting_perk_protections
@@ -1281,6 +1292,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   fire_protection:
+    enabled: true # false -> keep ordinary fire_protection ValhallaMMO scaling, no tiers
     base: minecraft:fire_protection
     required_perks:
       - enchanting_perk_protections
@@ -1302,6 +1314,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   blast_protection:
+    enabled: true # false -> keep ordinary blast_protection ValhallaMMO scaling, no tiers
     base: minecraft:blast_protection
     required_perks:
       - enchanting_perk_protections
@@ -1323,6 +1336,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   projectile_protection:
+    enabled: true # false -> keep ordinary projectile_protection ValhallaMMO scaling, no tiers
     base: minecraft:projectile_protection
     required_perks:
       - enchanting_perk_protections
@@ -1344,6 +1358,7 @@ tier_families:
           - required_ng: 5
             quality_at_first_level: 1520
   magic_protection:
+    enabled: true # false -> keep ordinary magic_protection ValhallaMMO scaling, no tiers
     base: enchantssquared:magic_protection
     required_perks:
       - enchanting_perk_protections
