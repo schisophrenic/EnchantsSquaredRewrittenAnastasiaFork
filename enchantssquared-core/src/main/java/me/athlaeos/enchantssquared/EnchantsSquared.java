@@ -14,6 +14,7 @@ import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
 import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantAliases;
 import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
@@ -117,6 +118,9 @@ public final class EnchantsSquared extends JavaPlugin {
             new Metrics(this, 10596);
         }
 
+        // Apply configurable display-only names before legacy managers load.
+        // Preserves every existing item ID/PDC entry.
+        NativeEnchantAliases.apply();
         grindstonesEnabled = ConfigManager.getInstance().getConfig("config.yml").get().getBoolean("allow_grindstone_removal", true);
         CommandManager legacyCommands = CommandManager.getInstance();
         registerCommand("enchantssquared", "EnchantsSquared commands", List.of("es"), new BasicCommand() {
