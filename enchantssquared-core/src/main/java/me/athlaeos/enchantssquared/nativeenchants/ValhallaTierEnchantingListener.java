@@ -105,15 +105,26 @@ public final class ValhallaTierEnchantingListener implements Listener {
 
         for (Map.Entry<NamespacedKey, List<Tier>> family : families.entrySet()) {
             Enchantment base = Registry.ENCHANTMENT.get(family.getKey());
-            if (base == null || !rolled.containsKey(base)) continue;
-            Enchantment replacement = choose(family.getValue(), quality, perks);
-            if (replacement == null) continue;
+            if (base == null) continue;
 
-            int level = rolled.remove(base);
-            // Use the scaled level ValhallaMMO already computed for the base
-            // enchantment, clamped to the custom enchantment's native max level.
-            int substitutedLevel = Math.max(1, Math.min(level, replacement.getMaxLevel()));
-            rolled.merge(replacement, substitutedLevel, Math::max);
+            // Handle both vanilla-roll maps and servers where changing the
+            // preview offer already puts the custom enchantment into the map.
+            int level = rolled.getOrDefault(base, 0);
+            for (Tier tier : family.getValue()) {
+                Enchantment tierEnchant = Registry.ENCHANTMENT.get(tier.enchantment());
+                if (tierEnchant != null) level = Math.max(level, rolled.getOrDefault(tierEnchant, 0));
+            }
+            if (level <= 0) continue;
+            rolled.remove(base);
+            for (Tier tier : family.getValue()) {
+                Enchantment tierEnchant = Registry.ENCHANTMENT.get(tier.enchantment());
+                if (tierEnchant != null) rolled.remove(tierEnchant);
+            }
+
+            Enchantment replacement = choose(family.getValue(), quality, perks);
+            Enchantment winner = replacement == null ? base : replacement;
+            int winnerLevel = Math.max(1, Math.min(level, winner.getMaxLevel()));
+            rolled.put(winner, winnerLevel);
         }
     }
 
