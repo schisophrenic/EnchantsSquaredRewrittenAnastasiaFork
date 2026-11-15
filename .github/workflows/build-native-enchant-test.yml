@@ -50,8 +50,11 @@ jobs:
       - name: Stage EnchantsSquared test JAR
         run: |
           mkdir -p dist-test
-          find target -maxdepth 1 -name '*.jar' -type f -ls
-          cp target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_NativeEnchant_NG_Test.jar
+          ls -lh enchantssquared-dist/target/*.jar
+          test -s enchantssquared-dist/target/EnchantsSquared_2.7.jar
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'plugin.yml'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeYamlRegistryGenerator.class'
+          cp enchantssquared-dist/target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_NativeEnchant_NG_Test.jar
       - name: Upload downloadable test plugin
         uses: actions/upload-artifact@v4
         with:
