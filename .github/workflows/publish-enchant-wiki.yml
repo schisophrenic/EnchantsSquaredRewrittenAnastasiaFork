@@ -1,0 +1,38 @@
+name: Publish Custom Enchantments to GitHub Wiki
+on:
+  push:
+    branches:
+      - release/beta-2026-11-16
+    paths:
+      - docs/wiki/Custom-Enchantments.md
+      - .github/workflows/publish-enchant-wiki.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-wiki:
+    name: Sync enchantment catalog to Wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish only Custom-Enchantments page
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki ||
+            { echo "::error::Cannot access Wiki Git repository. Create the Wiki's first page in the GitHub UI or check workflow permissions."; exit 1; }
+          cp docs/wiki/Custom-Enchantments.md wiki/Custom-Enchantments.md
+          git -C wiki config user.name "github-actions[bot]"
+          git -C wiki config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C wiki add Custom-Enchantments.md
+          if git -C wiki diff --cached --quiet; then
+            echo "Wiki is already up to date."
+          else
+            git -C wiki commit -m "Docs: full EnchantsSquared enchantment effects, rarities and equipment catalog"
+            git -C wiki push
+          fi
+          echo "Wiki page: https://github.com/${GITHUB_REPOSITORY}/wiki/Custom-Enchantments"
