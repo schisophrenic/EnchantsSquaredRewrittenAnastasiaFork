@@ -1,0 +1,115 @@
+# Edit this file to declare NEW REAL Minecraft enchantments.
+# The plugin generates a server datapack automatically on startup.
+# Restart again after a change so Minecraft loads the new registry definitions.
+#
+# Native registry entries are global. The enchantment table's tier replacements
+# are PLAYER-SPECIFIC, based on their ValhallaMMO perks and enchanting quality.
+#
+# Java effect handlers (implemented by the plugin):
+#   melee_flat_bonus: adds a flat amount to the attack damage event
+#   melee_multiplier: multiplies attack damage by (1 + configured amount)
+#   none: registry-only until you implement a Java handler
+#
+# More event handlers can be added without changing how enchantments are registered.
+settings:
+  generate_datapack: true
+  datapack_name: EnchantsSquaredNativeAuto
+  include_existing_enchantssquared: true
+
+enchantments:
+  lesser_sharpness:
+    enabled: true
+    display_name: Lesser Sharpness
+    supported_items:
+      - "#minecraft:enchantable/weapon"
+    slots: [mainhand]
+    weight: 10
+    max_level: 5
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 30
+    max_cost_per_level: 8
+    anvil_cost: 2
+    # Tiered enchantments must NEVER be independently rolled by the vanilla table.
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:sharpness
+      - enchantssquared:advanced_sharpness
+      - enchantssquared:supreme_sharpness
+    effect:
+      handler: melee_flat_bonus
+      base: 0.5
+      per_level: 0.25
+
+  advanced_sharpness:
+    enabled: true
+    display_name: Advanced Sharpness
+    supported_items:
+      - "#minecraft:enchantable/weapon"
+    slots: [mainhand]
+    weight: 5
+    max_level: 5
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 40
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:sharpness
+      - enchantssquared:lesser_sharpness
+      - enchantssquared:supreme_sharpness
+    effect:
+      handler: melee_flat_bonus
+      base: 1.5
+      per_level: 0.5
+
+  supreme_sharpness:
+    enabled: true
+    display_name: Supreme Sharpness
+    supported_items:
+      - "#minecraft:enchantable/weapon"
+    slots: [mainhand]
+    weight: 1
+    max_level: 5
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:sharpness
+      - enchantssquared:lesser_sharpness
+      - enchantssquared:advanced_sharpness
+    effect:
+      handler: melee_flat_bonus
+      base: 3.0
+      per_level: 1.0
+
+tier_families:
+  sharpness:
+    base: minecraft:sharpness
+    # The highest eligible tier replaces the LOWER one; the original
+    # Sharpness is not granted alongside the replacement.
+    tiers:
+      - enchantment: enchantssquared:lesser_sharpness
+        minimum_enchanting_quality: 80
+        required_perks:
+          - enchanting_perk_sharpnesses
+      - enchantment: enchantssquared:advanced_sharpness
+        minimum_enchanting_quality: 150
+        required_perks:
+          - enchanting_perk_sharpnesses
+          - enchanting_perk_ng1
+      - enchantment: enchantssquared:supreme_sharpness
+        minimum_enchanting_quality: 250
+        required_perks:
+          - enchanting_perk_sharpnesses
+          - enchanting_perk_ng2
+
+# All thresholds and effect amounts above are ILLUSTRATIVE STARTING VALUES.
+# Tune these to your ValhallaMMO skill/NG progression before production.
