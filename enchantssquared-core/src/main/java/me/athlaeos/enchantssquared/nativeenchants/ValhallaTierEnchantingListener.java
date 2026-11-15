@@ -29,8 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * This listener checks eligibility on BOTH preview and final item enchant.
  */
 public final class ValhallaTierEnchantingListener implements Listener {
-    private record Band(NamespacedKey enchantment, int ng, int minimumQuality,
-                        int qualityStep, int firstLevel, int maxLevel, List<String> perks) {}
+    private record Band(NamespacedKey enchantment, int ng, int minimumQuality, List<String> perks) {}
     private record Family(NamespacedKey base, List<String> perks, List<Band> bands) {}
     private record Choice(Enchantment enchantment, int level) {}
     private record Bonus(NamespacedKey enchantment, List<String> perks, int quality,
@@ -62,30 +61,9 @@ public final class ValhallaTierEnchantingListener implements Listener {
                     if (!(stage instanceof Map<?, ?> row)) continue;
                     int ng = Math.max(1, number(row.get("required_ng"), 1));
                     int minimum = Math.max(0, number(row.get("quality_at_first_level"), 0));
-                    int step = Math.max(1, number(row.get("quality_per_level"), 1));
-                    int first = Math.max(1, number(row.get("first_level"), 1));
-                    int cap = Math.max(first, number(row.get("max_level"), first));
-                    if (id.getKey().matches("(lesser|advanced|supreme)_(sharpness|smite|bane_of_arthropods)")) {
-                        // Migrate old tier progression I–X / XI–XXX on the fly.
-                        // Existing configs remain valid and are never rewritten.
-                        // Unlock stage, quality required, and the five-level
-                        // ceiling are authoritative in the new compact system.
-                        if (cap > 5 || first > 5) {
-                            first = (ng == 2 || ng == 4) ? 4 : 1;
-                            cap = (ng == 1 || ng == 3) ? 3 : 5;
-                            step = switch (ng) {
-                                case 1 -> 90;
-                                case 2 -> 228;
-                                case 3 -> 99;
-                                case 4 -> 209;
-                                default -> 88;
-                            };
-                        } else {
-                            first = Math.min(5, first);
-                            cap = Math.min(5, cap);
-                        }
-                    }
-                    bands.add(new Band(id, ng, minimum, step, first, cap, tierPerks));
+                    // Stage threshold alone selects the tier; the actual
+                    // enchant level comes from ValhallaMMO (including VI+).
+                    bands.add(new Band(id, ng, minimum, tierPerks));
                 }
             }
             // Supreme/Advanced first; for each tier the highest available NG band wins.
