@@ -14,6 +14,8 @@ import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
 import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
@@ -181,6 +183,8 @@ public final class EnchantsSquared extends JavaPlugin {
         // ENCHANTMENT.compose lifecycle event, before worlds load.
         YamlConfiguration nativeConfig = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
         registerListener(new NativeYamlEffectListener(nativeConfig));
+        registerListener(new NativeRangedEnchantListener());
+        registerListener(new NativeProtectionEnchantListener(nativeConfig));
         if (valhallaHooked) {
             registerListener(new ValhallaTierEnchantingListener(nativeConfig));
         }
