@@ -24,7 +24,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 10
-    max_level: 5
+    max_level: 30
     min_cost_base: 5
     min_cost_per_level: 8
     max_cost_base: 30
@@ -49,7 +49,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 5
-    max_level: 5
+    max_level: 30
     min_cost_base: 15
     min_cost_per_level: 8
     max_cost_base: 40
@@ -73,7 +73,7 @@ enchantments:
       - "#minecraft:enchantable/weapon"
     slots: [mainhand]
     weight: 1
-    max_level: 5
+    max_level: 10
     min_cost_base: 25
     min_cost_per_level: 8
     max_cost_base: 60
@@ -90,26 +90,285 @@ enchantments:
       base: 3.0
       per_level: 1.0
 
+
+  lesser_smite:
+    enabled: true
+    display_name: Lesser Smite
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 8
+    max_level: 30
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:smite
+      - enchantssquared:lesser_smite
+      - enchantssquared:advanced_smite
+      - enchantssquared:supreme_smite
+    effect:
+      handler: melee_flat_bonus
+      base: 0.5
+      per_level: 0.2
+
+  advanced_smite:
+    enabled: true
+    display_name: Advanced Smite
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 4
+    max_level: 30
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:smite
+      - enchantssquared:lesser_smite
+      - enchantssquared:advanced_smite
+      - enchantssquared:supreme_smite
+    effect:
+      handler: melee_flat_bonus
+      base: 1.5
+      per_level: 0.2
+
+  supreme_smite:
+    enabled: true
+    display_name: Supreme Smite
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 1
+    max_level: 10
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:smite
+      - enchantssquared:lesser_smite
+      - enchantssquared:advanced_smite
+      - enchantssquared:supreme_smite
+    effect:
+      handler: melee_flat_bonus
+      base: 3
+      per_level: 0.5
+
+  lesser_bane_of_arthropods:
+    enabled: true
+    display_name: Lesser Bane of Arthropods
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 8
+    max_level: 30
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:bane_of_arthropods
+      - enchantssquared:lesser_bane_of_arthropods
+      - enchantssquared:advanced_bane_of_arthropods
+      - enchantssquared:supreme_bane_of_arthropods
+    effect:
+      handler: melee_flat_bonus
+      base: 0.5
+      per_level: 0.2
+
+  advanced_bane_of_arthropods:
+    enabled: true
+    display_name: Advanced Bane of Arthropods
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 4
+    max_level: 30
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:bane_of_arthropods
+      - enchantssquared:lesser_bane_of_arthropods
+      - enchantssquared:advanced_bane_of_arthropods
+      - enchantssquared:supreme_bane_of_arthropods
+    effect:
+      handler: melee_flat_bonus
+      base: 1.5
+      per_level: 0.2
+
+  supreme_bane_of_arthropods:
+    enabled: true
+    display_name: Supreme Bane of Arthropods
+    supported_items: ["#minecraft:enchantable/weapon"]
+    slots: [mainhand]
+    weight: 1
+    max_level: 10
+    min_cost_base: 10
+    min_cost_per_level: 5
+    max_cost_base: 45
+    max_cost_per_level: 5
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:bane_of_arthropods
+      - enchantssquared:lesser_bane_of_arthropods
+      - enchantssquared:advanced_bane_of_arthropods
+      - enchantssquared:supreme_bane_of_arthropods
+    effect:
+      handler: melee_flat_bonus
+      base: 3
+      per_level: 0.5
+
+# A family is rolled from its vanilla base, then becomes the highest eligible tier.
+# NG stage is checked using permanent ValhallaMMO perk IDs, NOT merely quality.
+# A branch perk is also required. This example binds all three offensive families
+# to the already-existing "enchanting_perk_sharpnesses" perk.
+#
+# quality_at_first_level: effective ENCHANTING_QUALITY where the band starts.
+# quality_per_level: effective quality required for each additional enchantment level.
+# Level selection uses floor((quality - quality_at_first_level) / quality_per_level).
+#
+# The quality windows below are tuned to the uploaded progression's no-external-buff
+# benchmark Q~753 at NG1 lv125; 985 NG2 lv150; 1190 NG3 lv175; 1410 NG4 lv200;
+# and 1785 NG5 lv200, assuming the main and NG quality perks are purchased.
 tier_families:
   sharpness:
     base: minecraft:sharpness
-    # The highest eligible tier replaces the LOWER one; the original
-    # Sharpness is not granted alongside the replacement.
+    required_perks:
+      - enchanting_perk_sharpnesses
     tiers:
       - enchantment: enchantssquared:lesser_sharpness
-        minimum_enchanting_quality: 80
-        required_perks:
-          - enchanting_perk_sharpnesses
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 550
+            quality_per_level: 20
+            first_level: 1
+            max_level: 10
+          - required_ng: 2
+            quality_at_first_level: 755
+            quality_per_level: 12
+            first_level: 11
+            max_level: 30
       - enchantment: enchantssquared:advanced_sharpness
-        minimum_enchanting_quality: 150
-        required_perks:
-          - enchanting_perk_sharpnesses
-          - enchanting_perk_ng1
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 990
+            quality_per_level: 22
+            first_level: 1
+            max_level: 10
+          - required_ng: 4
+            quality_at_first_level: 1195
+            quality_per_level: 11
+            first_level: 11
+            max_level: 30
       - enchantment: enchantssquared:supreme_sharpness
-        minimum_enchanting_quality: 250
-        required_perks:
-          - enchanting_perk_sharpnesses
-          - enchanting_perk_ng2
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1420
+            quality_per_level: 39
+            first_level: 1
+            max_level: 10
+  smite:
+    base: minecraft:smite
+    required_perks:
+      - enchanting_perk_sharpnesses
+    tiers:
+      - enchantment: enchantssquared:lesser_smite
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 550
+            quality_per_level: 20
+            first_level: 1
+            max_level: 10
+          - required_ng: 2
+            quality_at_first_level: 755
+            quality_per_level: 12
+            first_level: 11
+            max_level: 30
+      - enchantment: enchantssquared:advanced_smite
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 990
+            quality_per_level: 22
+            first_level: 1
+            max_level: 10
+          - required_ng: 4
+            quality_at_first_level: 1195
+            quality_per_level: 11
+            first_level: 11
+            max_level: 30
+      - enchantment: enchantssquared:supreme_smite
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1420
+            quality_per_level: 39
+            first_level: 1
+            max_level: 10
+  bane_of_arthropods:
+    base: minecraft:bane_of_arthropods
+    required_perks:
+      - enchanting_perk_sharpnesses
+    tiers:
+      - enchantment: enchantssquared:lesser_bane_of_arthropods
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 550
+            quality_per_level: 20
+            first_level: 1
+            max_level: 10
+          - required_ng: 2
+            quality_at_first_level: 755
+            quality_per_level: 12
+            first_level: 11
+            max_level: 30
+      - enchantment: enchantssquared:advanced_bane_of_arthropods
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 990
+            quality_per_level: 22
+            first_level: 1
+            max_level: 10
+          - required_ng: 4
+            quality_at_first_level: 1195
+            quality_per_level: 11
+            first_level: 11
+            max_level: 30
+      - enchantment: enchantssquared:supreme_bane_of_arthropods
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1420
+            quality_per_level: 39
+            first_level: 1
+            max_level: 10
 
-# All thresholds and effect amounts above are ILLUSTRATIVE STARTING VALUES.
-# Tune these to your ValhallaMMO skill/NG progression before production.
+# Use this section for special enchantments tied to a perk rather than tiers.
+# Register those enchantments above with table_obtainable: false.
+# Each is eligible as an EXTRA enchanting roll only if the corresponding
+# ValhallaMMO perk is unlocked. Define effect.handler above for its Java effect.
+#
+# Example (uncomment only after creating the matching enchantment definition):
+# perk_enchantments:
+#   glacial_touch:
+#     enchantment: enchantssquared:glacial_touch
+#     required_perks: [enchanting_perk_freezing]
+#     minimum_enchanting_quality: 750
+#     chance: 0.10
+#     fixed_level: 1
+#
+perk_enchantments: {}
