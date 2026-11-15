@@ -18,7 +18,7 @@ enchantments:
     compatible_with:
       - HELMETS
     stats:
-      ALCHEMY_BREW_SPEED:
+      BREWING_SPEED_BONUS:
         base: 0.5
         lv: 0.25
       ALCHEMY_QUALITY_GENERAL:

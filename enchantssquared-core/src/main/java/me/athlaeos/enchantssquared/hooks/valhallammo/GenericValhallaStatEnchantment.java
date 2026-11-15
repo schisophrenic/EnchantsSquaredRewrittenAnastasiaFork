@@ -128,7 +128,7 @@ public class GenericValhallaStatEnchantment extends CustomEnchant {
 
     @Override
     public int getTradingMaxLeveledPrice() {
-        return config.getInt("enchantments." + type.toLowerCase() + ".trade_cost_base_upper");
+        return config.getInt("enchantments." + type.toLowerCase() + ".trade_cost_lv_upper");
     }
 
     private final ItemStack icon;
