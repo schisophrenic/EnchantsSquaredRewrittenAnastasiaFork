@@ -65,8 +65,9 @@ public final class NativeRangedEnchantListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMelee(EntityDamageByEntityEvent event) {
-        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                && event.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) return;
+        // Vanilla Fire Aspect affects the directly struck target,
+        // not the secondary targets of a sweeping attack.
+        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) return;
         if (!(event.getDamager() instanceof LivingEntity attacker)
                 || !(event.getEntity() instanceof LivingEntity victim)) return;
         int fireLevel = level(attacker.getEquipment() == null
