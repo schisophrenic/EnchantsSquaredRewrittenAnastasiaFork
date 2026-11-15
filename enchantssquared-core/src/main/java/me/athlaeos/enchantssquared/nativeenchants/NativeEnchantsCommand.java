@@ -5,8 +5,6 @@ import me.athlaeos.enchantssquared.config.ConfigManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.jetbrains.annotations.NotNull;
 
 /** Admin command: /esnative generate (restart server after generation). */
 public final class NativeEnchantsCommand implements CommandExecutor {
@@ -17,8 +15,8 @@ public final class NativeEnchantsCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
-                             @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(CommandSender sender, Command command,
+                             String label, String[] args) {
         if (!sender.hasPermission("es.native.generate")) {
             sender.sendMessage("You do not have permission to generate native enchantments.");
             return true;
@@ -28,7 +26,6 @@ public final class NativeEnchantsCommand implements CommandExecutor {
             return true;
         }
         ConfigManager.getInstance().reloadConfig("config_native_enchants.yml");
-        YamlConfiguration reloaded = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
         new NativeYamlRegistryGenerator(plugin).generate();
         sender.sendMessage("Native enchantment generation attempted using config_native_enchants.yml."
                 + " Check console for errors, then FULLY RESTART to load registry changes.");
