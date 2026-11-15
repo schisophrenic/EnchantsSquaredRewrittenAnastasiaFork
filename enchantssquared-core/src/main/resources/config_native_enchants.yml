@@ -18,6 +18,10 @@ settings:
   # Existing EnchantsSquared PDC effects remain enabled independently.
   # Only this enchantments: section is registered as new native entries.
   maximum_bonus_enchantments: 1
+  # Magic Protection reduces elemental hits by 3% per level per armor piece.
+  # The sum of all protection enchantment-based mitigation stays <90% (max 85%).
+  magic_protection_percent_per_level: 0.03
+  magic_protection_max_reduction: 0.85
 
 enchantments:
   lesser_sharpness:
@@ -247,6 +251,852 @@ enchantments:
           duration_ticks: 40
           amplifier: 0
 
+  # Additional native Java-registered enchantments: bow, fire and protection.
+  # Base magic_protection is rollable; its NG tiers are perk/quality gated.
+  lesser_power:
+    enabled: true
+    display_name: Lesser Power
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 10
+    max_level: 5
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:power
+      - enchantssquared:advanced_power
+      - enchantssquared:supreme_power
+    effect:
+      handler: none
+
+  advanced_power:
+    enabled: true
+    display_name: Advanced Power
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 10
+    max_level: 5
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:power
+      - enchantssquared:lesser_power
+      - enchantssquared:supreme_power
+    effect:
+      handler: none
+
+  supreme_power:
+    enabled: true
+    display_name: Supreme Power
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 10
+    max_level: 5
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:power
+      - enchantssquared:lesser_power
+      - enchantssquared:advanced_power
+    effect:
+      handler: none
+
+  lesser_punch:
+    enabled: true
+    display_name: Lesser Punch
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:punch
+      - enchantssquared:advanced_punch
+      - enchantssquared:supreme_punch
+    effect:
+      handler: none
+
+  advanced_punch:
+    enabled: true
+    display_name: Advanced Punch
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:punch
+      - enchantssquared:lesser_punch
+      - enchantssquared:supreme_punch
+    effect:
+      handler: none
+
+  supreme_punch:
+    enabled: true
+    display_name: Supreme Punch
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:punch
+      - enchantssquared:lesser_punch
+      - enchantssquared:advanced_punch
+    effect:
+      handler: none
+
+  lesser_flame:
+    enabled: true
+    display_name: Lesser Flame
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 2
+    max_level: 1
+    min_cost_base: 5
+    min_cost_per_level: 0
+    max_cost_base: 60
+    max_cost_per_level: 0
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:flame
+      - enchantssquared:advanced_flame
+      - enchantssquared:supreme_flame
+    effect:
+      handler: none
+
+  advanced_flame:
+    enabled: true
+    display_name: Advanced Flame
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 2
+    max_level: 1
+    min_cost_base: 15
+    min_cost_per_level: 0
+    max_cost_base: 60
+    max_cost_per_level: 0
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:flame
+      - enchantssquared:lesser_flame
+      - enchantssquared:supreme_flame
+    effect:
+      handler: none
+
+  supreme_flame:
+    enabled: true
+    display_name: Supreme Flame
+    supported_items: ["#minecraft:enchantable/bow"]
+    slots: [mainhand]
+    weight: 2
+    max_level: 1
+    min_cost_base: 25
+    min_cost_per_level: 0
+    max_cost_base: 60
+    max_cost_per_level: 0
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:flame
+      - enchantssquared:lesser_flame
+      - enchantssquared:advanced_flame
+    effect:
+      handler: none
+
+  lesser_fire_aspect:
+    enabled: true
+    display_name: Lesser Fire Aspect
+    supported_items: ["#minecraft:enchantable/fire_aspect"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:fire_aspect
+      - enchantssquared:advanced_fire_aspect
+      - enchantssquared:supreme_fire_aspect
+    effect:
+      handler: none
+
+  advanced_fire_aspect:
+    enabled: true
+    display_name: Advanced Fire Aspect
+    supported_items: ["#minecraft:enchantable/fire_aspect"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:fire_aspect
+      - enchantssquared:lesser_fire_aspect
+      - enchantssquared:supreme_fire_aspect
+    effect:
+      handler: none
+
+  supreme_fire_aspect:
+    enabled: true
+    display_name: Supreme Fire Aspect
+    supported_items: ["#minecraft:enchantable/fire_aspect"]
+    slots: [mainhand]
+    weight: 5
+    max_level: 2
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:fire_aspect
+      - enchantssquared:lesser_fire_aspect
+      - enchantssquared:advanced_fire_aspect
+    effect:
+      handler: none
+
+  lesser_protection:
+    enabled: true
+    display_name: Lesser Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 10
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  advanced_protection:
+    enabled: true
+    display_name: Advanced Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 10
+    max_level: 4
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  supreme_protection:
+    enabled: true
+    display_name: Supreme Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 10
+    max_level: 4
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  lesser_fire_protection:
+    enabled: true
+    display_name: Lesser Fire Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  advanced_fire_protection:
+    enabled: true
+    display_name: Advanced Fire Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  supreme_fire_protection:
+    enabled: true
+    display_name: Supreme Fire Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  lesser_blast_protection:
+    enabled: true
+    display_name: Lesser Blast Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  advanced_blast_protection:
+    enabled: true
+    display_name: Advanced Blast Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  supreme_blast_protection:
+    enabled: true
+    display_name: Supreme Blast Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  lesser_projectile_protection:
+    enabled: true
+    display_name: Lesser Projectile Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  advanced_projectile_protection:
+    enabled: true
+    display_name: Advanced Projectile Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  supreme_projectile_protection:
+    enabled: true
+    display_name: Supreme Projectile Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  magic_protection:
+    enabled: true
+    display_name: Magic Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: true
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  lesser_magic_protection:
+    enabled: true
+    display_name: Lesser Magic Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 5
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:advanced_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  advanced_magic_protection:
+    enabled: true
+    display_name: Advanced Magic Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 15
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 4
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:supreme_magic_protection
+    effect:
+      handler: none
+
+  supreme_magic_protection:
+    enabled: true
+    display_name: Supreme Magic Protection
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 5
+    max_level: 4
+    min_cost_base: 25
+    min_cost_per_level: 8
+    max_cost_base: 60
+    max_cost_per_level: 8
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    exclusive_set:
+      - minecraft:protection
+      - enchantssquared:lesser_protection
+      - enchantssquared:advanced_protection
+      - enchantssquared:supreme_protection
+      - minecraft:fire_protection
+      - enchantssquared:lesser_fire_protection
+      - enchantssquared:advanced_fire_protection
+      - enchantssquared:supreme_fire_protection
+      - minecraft:blast_protection
+      - enchantssquared:lesser_blast_protection
+      - enchantssquared:advanced_blast_protection
+      - enchantssquared:supreme_blast_protection
+      - minecraft:projectile_protection
+      - enchantssquared:lesser_projectile_protection
+      - enchantssquared:advanced_projectile_protection
+      - enchantssquared:supreme_projectile_protection
+      - enchantssquared:magic_protection
+      - enchantssquared:lesser_magic_protection
+      - enchantssquared:advanced_magic_protection
+    effect:
+      handler: none
+
 # A family is selected from its vanilla enchant, using NG/perk/quality gates.
 # The player must have enchanting_perk_sharpnesses for these offensive tiers.
 #
@@ -321,6 +1171,196 @@ tier_families:
           - required_ng: 4
             quality_at_first_level: 1295
       - enchantment: enchantssquared:supreme_bane_of_arthropods
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+
+  power:
+    base: minecraft:power
+    required_perks:
+      - enchanting_perk_sharpnesses
+    tiers:
+      - enchantment: enchantssquared:lesser_power
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_power
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_power
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  punch:
+    base: minecraft:punch
+    required_perks:
+      - enchanting_perk_sharpnesses
+    tiers:
+      - enchantment: enchantssquared:lesser_punch
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_punch
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_punch
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  flame:
+    base: minecraft:flame
+    required_perks:
+      - enchanting_perk_fire
+    tiers:
+      - enchantment: enchantssquared:lesser_flame
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_flame
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_flame
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  fire_aspect:
+    base: minecraft:fire_aspect
+    required_perks:
+      - enchanting_perk_fire
+    tiers:
+      - enchantment: enchantssquared:lesser_fire_aspect
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_fire_aspect
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_fire_aspect
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  protection:
+    base: minecraft:protection
+    required_perks:
+      - enchanting_perk_protections
+    tiers:
+      - enchantment: enchantssquared:lesser_protection
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_protection
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_protection
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  fire_protection:
+    base: minecraft:fire_protection
+    required_perks:
+      - enchanting_perk_protections
+    tiers:
+      - enchantment: enchantssquared:lesser_fire_protection
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_fire_protection
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_fire_protection
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  blast_protection:
+    base: minecraft:blast_protection
+    required_perks:
+      - enchanting_perk_protections
+    tiers:
+      - enchantment: enchantssquared:lesser_blast_protection
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_blast_protection
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_blast_protection
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  projectile_protection:
+    base: minecraft:projectile_protection
+    required_perks:
+      - enchanting_perk_protections
+    tiers:
+      - enchantment: enchantssquared:lesser_projectile_protection
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_projectile_protection
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_projectile_protection
+        progression:
+          - required_ng: 5
+            quality_at_first_level: 1520
+  magic_protection:
+    base: enchantssquared:magic_protection
+    required_perks:
+      - enchanting_perk_protections
+    tiers:
+      - enchantment: enchantssquared:lesser_magic_protection
+        progression:
+          - required_ng: 1
+            quality_at_first_level: 650
+          - required_ng: 2
+            quality_at_first_level: 855
+      - enchantment: enchantssquared:advanced_magic_protection
+        progression:
+          - required_ng: 3
+            quality_at_first_level: 1090
+          - required_ng: 4
+            quality_at_first_level: 1295
+      - enchantment: enchantssquared:supreme_magic_protection
         progression:
           - required_ng: 5
             quality_at_first_level: 1520
