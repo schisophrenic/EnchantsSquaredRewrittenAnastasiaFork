@@ -389,6 +389,20 @@ tier_families:
             first_level: 1
             max_level: 10
 
+# Existing ValhallaMMO enchanting perks approved for categories.
+# These IDs come from enchanting_progression.yml; no changes to the
+# ValhallaMMO jar or perk reward registry are required.
+perk_groups:
+  offensive: enchanting_perk_sharpnesses
+  defensive: enchanting_perk_protections
+  elemental_fire: enchanting_perk_fire
+  elemental_freeze: enchanting_perk_freezing
+  elemental_poison: enchanting_perk_poison
+  magical: enchanting_perk_arcane
+  attributes: enchanting_perk_sovereign
+  smithing: enchanting_perk_spellforged
+  utility: enchanting_perk_utility
+
 # Use this section for special enchantments tied to a perk rather than tiers.
 # Register those enchantments above with table_obtainable: false.
 # Each is eligible as an EXTRA enchanting roll only if the corresponding
@@ -407,7 +421,7 @@ perk_enchantments:
   envenomed:
     enabled: true
     enchantment: enchantssquared:envenomed
-    required_perks: [enchanting_perk_poison]
+    perk_group: elemental_poison
     minimum_ng: 2
     minimum_enchanting_quality: 850
     chance: 0.10
