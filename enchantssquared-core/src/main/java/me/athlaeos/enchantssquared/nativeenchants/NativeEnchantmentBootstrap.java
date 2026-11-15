@@ -8,7 +8,6 @@ import io.papermc.paper.registry.data.EnchantmentRegistryEntry;
 import io.papermc.paper.registry.event.RegistryComposeEvent;
 import io.papermc.paper.registry.event.RegistryEvents;
 import io.papermc.paper.registry.keys.EnchantmentKeys;
-import io.papermc.paper.registry.keys.ItemTypeKeys;
 import io.papermc.paper.registry.keys.tags.EnchantmentTagKeys;
 import io.papermc.paper.registry.set.RegistryKeySet;
 import io.papermc.paper.registry.set.RegistrySet;
@@ -162,7 +161,7 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
         for (String raw : requested) {
             if (raw.startsWith("#")) throw new IllegalArgumentException(
                     "Use a single #tag OR explicit item IDs in supported_items; mixing is unsupported: " + requested);
-            keys.add(ItemTypeKeys.create(Key.key(raw)));
+            keys.add(RegistryKey.ITEM.typedKey(Key.key(raw)));
         }
         return RegistrySet.keySet(RegistryKey.ITEM, keys);
     }
