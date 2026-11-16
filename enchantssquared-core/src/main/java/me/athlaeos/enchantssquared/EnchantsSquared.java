@@ -24,6 +24,8 @@ import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaAttributeBrid
 import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSimpleEnchantConfig;
+import me.athlaeos.enchantssquared.nativeenchants.NativeCustomEnchantActions;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
 import me.athlaeos.enchantssquared.managers.AnimationRegistry;
@@ -198,6 +200,12 @@ public final class EnchantsSquared extends JavaPlugin {
         // The native enchantments have already been registered in Paper's
         // ENCHANTMENT.compose lifecycle event, before worlds load.
         YamlConfiguration nativeConfig = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
+        // The Paper bootstrap already registered custom YAML enchants.
+        // Merge their metadata again at runtime so existing loot + attribute
+        // handlers see exactly the same source probabilities and levels.
+        YamlConfiguration simpleEnchants = NativeSimpleEnchantConfig.merge(
+                getDataFolder().toPath(), nativeConfig);
+        registerListener(new NativeCustomEnchantActions(this, simpleEnchants));
         registerListener(new NativeYamlEffectListener(nativeConfig));
         registerListener(new NativeRangedEnchantListener());
         registerListener(new NativeProtectionEnchantListener(nativeConfig));
