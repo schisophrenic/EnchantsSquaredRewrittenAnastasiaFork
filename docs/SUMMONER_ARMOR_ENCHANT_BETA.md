@@ -119,7 +119,7 @@ extreme lag; they are NOT a hidden cap on the enchantment's level.
 1. **Back up** the test world, player data and YAML files.
 2. Install the Summoner test JAR, stop the server, and restart completely
    (not /reload). Paper-native registry entries cannot hot-register.
-3. Confirm `/esnative status` lists **54 enabled native enchantments**.
+3. Confirm `/esnative status` reports **53 enabled native enchantments** (54 declared, one disabled).
 4. Equip an armor item with `/enchant @s enchantssquared:summoner 1`.
 5. Have a test mob attack you until Summoner triggers; confirm it spawns a
    Wolf or Iron Golem that targets your attacker.
