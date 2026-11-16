@@ -19,15 +19,28 @@ public final class EnchantmentPriority {
             "projectile_protection", "blast_protection", "fire_protection");
     public static final List<String> OFFENSE = List.of("sharpness", "smite", "bane_of_arthropods");
     private final boolean enabled;
+    private final List<String> defenseOrder;
+    private final List<String> offenseOrder;
     private final Map<Integer, double[]> defense;
     private final Map<Integer, double[]> offense;
 
     public EnchantmentPriority(ConfigurationSection root) {
         enabled = root == null || root.getBoolean("enabled", true);
+        defenseOrder = order(root, "defense_order", DEFENSE);
+        offenseOrder = order(root, "offense_order", OFFENSE);
         defense = read(root == null ? null : root.getConfigurationSection("defense"),
                 new int[][] {{10}, {5,5}, {5,3,2}, {4,2,2,2}, {3,2,2,2,1}});
         offense = read(root == null ? null : root.getConfigurationSection("offense"),
                 new int[][] {{10}, {5,5}, {5,3,2}});
+    }
+
+    private static List<String> order(ConfigurationSection root, String field, List<String> defaults) {
+        if (root == null) return defaults;
+        List<String> names = root.getStringList(field);
+        // Reject incomplete, duplicate or unknown family names.
+        if (names.size() != defaults.size() || !names.containsAll(defaults)
+                || names.stream().distinct().count() != defaults.size()) return defaults;
+        return List.copyOf(names);
     }
 
     private static Map<Integer, double[]> read(ConfigurationSection section, int[][] defaults) {
@@ -47,7 +60,7 @@ public final class EnchantmentPriority {
     }
 
     public Map<String, Double> weights(ItemStack item, boolean armor) {
-        List<String> ordered = armor ? DEFENSE : OFFENSE;
+        List<String> ordered = armor ? defenseOrder : offenseOrder;
         List<String> present = new ArrayList<>();
         if (item == null || item.getType().isAir()) return Map.of();
         for (String family : ordered) {
