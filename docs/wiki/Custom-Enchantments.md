@@ -235,6 +235,14 @@ Native custom entries can specify independent acquisition probabilities for the 
 
 *An absent acquisition entry means this extra random-acquisition system does not select that enchantment directly; it may have another registered source such as a perk roll or an original plugin's system.*
 
+## Enchantment evolution (anti-stacking)
+
+The beta evolution feature prevents two stages of the same enchantment from stacking on a single item. For example, **vanilla Sharpness → Lesser Sharpness → Advanced Sharpness → Supreme Sharpness** is one chain, not four independent damage bonuses. If a legacy test sword contains both Sharpness V and Supreme Sharpness III, the evolution normalizer retains **Supreme Sharpness V** and removes ordinary Sharpness. The same principle applies to Smite, Power, Protection, Magic Protection, Fire Aspect and the other configured tier families.
+
+Administrators can create their own evolutions by setting `upgrade_of`, `upgrade_method: ANVIL`, `required_level`, `result_level`, and `inherit_level` under an enchantment in `config_custom_enchants.yml`. A disabled example named **Greater Soul Capture** demonstrates evolving Soul Capture III into Greater Soul Capture I with an enchanted book in an anvil. The enchantment registry automatically marks all stages of an evolution family as incompatible; already-illegal items are normalized on login, held-item change and periodically.
+
+This feature is **beta**; test anvil outcomes and item metadata on Purpur 26.3 before deploying to a production server. See [Enchantment Evolution guide](../ENCHANT_EVOLUTION_NO_STACKING_BETA.md).
+
 ## Notes on disabled and mirrored enchantments
 
 - **Damage Reduction** (`damage_reduction`) is blocked by the native `blocked_base_enchants` configuration even though its original legacy `config.yml` entry is enabled.

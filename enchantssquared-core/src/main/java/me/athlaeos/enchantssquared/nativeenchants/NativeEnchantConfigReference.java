@@ -110,6 +110,10 @@ public final class NativeEnchantConfigReference {
             out.append("# weight, max_level, conflicts, min_cost_base, min_cost_per_level,\n");
             out.append("# max_cost_base, max_cost_per_level, anvil_cost, acquisition,\n");
             out.append("# triggers, attribute, scale_per_level, attribute_operation.\n");
+            out.append("# EVOLUTION: upgrade_of (namespaced prior enchant), upgrade_method: ANVIL,\n");
+            out.append("# required_level (prior minimum), result_level (new base), inherit_level.\n");
+            out.append("# Evolution families are exclusive: strongest stage wins; VI+ preserved\n");
+            out.append("# when inherit_level is true. Legacy duplicate items are normalized.\n");
             out.append("# TYPES: weapon, armor, boots, bow, mining, fishing.\n");
             out.append("# RARITIES: common, uncommon, rare, epic, legendary.\n");
             out.append("# TRIGGERS: ON_HIT, ON_DAMAGED, ON_KILL, ON_MINE,\n");

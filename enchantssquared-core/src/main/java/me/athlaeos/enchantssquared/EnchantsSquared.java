@@ -25,6 +25,7 @@ import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeSimpleEnchantConfig;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantmentEvolution;
 import me.athlaeos.enchantssquared.nativeenchants.NativeCustomEnchantActions;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
@@ -56,6 +57,7 @@ public final class EnchantsSquared extends JavaPlugin {
     private static boolean valhallaHooked = false;
     private NativeAttributeEnchantEngine nativeAttributeEngine;
     private NativeSummonerEnchantListener nativeSummonerListener;
+    private NativeEnchantmentEvolution nativeEvolution;
     private static boolean worldGuardHooked = false;
     private static boolean mcMMOHooked = false;
     private static boolean jobsHooked = false;
@@ -233,6 +235,11 @@ public final class EnchantsSquared extends JavaPlugin {
         if (valhallaHooked) {
             registerListener(new ValhallaTierEnchantingListener(nativeConfig));
         }
+        // Run after NG tier replacement and custom enchanting rolls. Also
+        // normalize anvil, smithing and older illegal double-enchanted items.
+        nativeEvolution = new NativeEnchantmentEvolution(this, nativeConfig, simpleEnchants);
+        registerListener(nativeEvolution);
+        getServer().getScheduler().runTaskTimer(this, nativeEvolution, 20L, 100L);
         int nativeCount = 0;
         var nativeDefs = nativeConfig.getConfigurationSection("enchantments");
         if (nativeDefs != null) {

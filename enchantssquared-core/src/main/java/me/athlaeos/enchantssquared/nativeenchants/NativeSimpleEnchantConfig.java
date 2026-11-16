@@ -105,6 +105,17 @@ public final class NativeSimpleEnchantConfig {
             nativeConfig.set(root + "tradeable", false);
             nativeConfig.set(root + "treasure", entry.getBoolean("treasure", false));
             nativeConfig.set(root + "exclusive_set", entry.getStringList("conflicts"));
+            // upgrade_of is a directed evolution, but BOTH sides must
+            // exclude each other as normal enchantments in Paper's registry.
+            // An anvil with the appropriate enchanted book handles the
+            // conversion; ordinary enchanting never stacks them.
+            String upgradeOf = entry.getString("upgrade_of", "");
+            if (!upgradeOf.isBlank()) {
+                org.bukkit.NamespacedKey parent = org.bukkit.NamespacedKey.fromString(upgradeOf);
+                if (parent == null || parent.equals(new org.bukkit.NamespacedKey("enchantssquared", id)))
+                    throw new IllegalArgumentException("Invalid upgrade_of for " + id + ": " + upgradeOf);
+                nativeConfig.set(root + "upgrade_of", parent.toString());
+            }
             // Passive attributes are also supported by the already existing
             // Bukkit + ValhallaMMO NativeAttributeEnchantEngine.
             ConfigurationSection attributes = entry.getConfigurationSection("attribute");
@@ -123,6 +134,56 @@ public final class NativeSimpleEnchantConfig {
                     nativeConfig.set(root + "acquisition." + source,
                             clamp(acquisition.getDouble(source, 0)));
                 }
+            }
+        }
+
+        // A custom evolution group is mutually exclusive at registration
+        // time (in addition to runtime repair of invalid old item stacks).
+        // Compute the complete chain, not just immediate parents, so the
+        // highest stage cannot be combined with any prior stage or sibling.
+        java.util.Map<String, String> links = new java.util.LinkedHashMap<>();
+        ConfigurationSection tiers = nativeConfig.getConfigurationSection("tier_families");
+        if (tiers != null) for (String name : tiers.getKeys(false)) {
+            ConfigurationSection fam = tiers.getConfigurationSection(name);
+            if (fam == null) continue;
+            String previous = fam.getString("base", "");
+            for (java.util.Map<?, ?> row : fam.getMapList("tiers")) {
+                Object raw = row.get("enchantment");
+                if (raw == null) continue;
+                String next = raw.toString();
+                links.put(next, previous);
+                previous = next;
+            }
+        }
+        for (String id : entries.getKeys(false)) {
+            ConfigurationSection entry = entries.getConfigurationSection(id);
+            if (entry == null || !entry.getBoolean("enabled", true)) continue;
+            String upgrade = entry.getString("upgrade_of", "");
+            if (upgrade.isBlank()) continue;
+            links.put("enchantssquared:" + id, upgrade);
+        }
+        java.util.Map<String, java.util.List<String>> groups = new java.util.LinkedHashMap<>();
+        for (String id : links.keySet()) {
+            java.util.Set<String> visited = new java.util.HashSet<>();
+            String root = id;
+            while (links.containsKey(root) && visited.add(root)) root = links.get(root);
+            if (!visited.add(root)) throw new IllegalArgumentException("Cyclic upgrade_of chain at " + id);
+            groups.computeIfAbsent(root, ignored -> new java.util.ArrayList<>()).add(id);
+        }
+        for (var group : groups.entrySet()) {
+            java.util.List<String> members = new java.util.ArrayList<>(group.getValue());
+            members.add(group.getKey());
+            // Vanilla base enchantments cannot be edited in our registry.
+            // All custom participants exclude every other member.
+            for (String id : members) {
+                if (!id.startsWith("enchantssquared:")) continue;
+                String nativeId = id.substring("enchantssquared:".length());
+                if (!nativeConfig.getBoolean("enchantments." + nativeId + ".enabled", false)) continue;
+                String key = "enchantments." + nativeId + ".exclusive_set";
+                java.util.Set<String> excluded = new java.util.LinkedHashSet<>(nativeConfig.getStringList(key));
+                for (String other : members) if (!id.equals(other)) excluded.add(other);
+                excluded.remove(id);
+                nativeConfig.set(key, new java.util.ArrayList<>(excluded));
             }
         }
         return custom;

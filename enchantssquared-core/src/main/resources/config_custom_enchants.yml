@@ -14,6 +14,12 @@
 #   max_level: normal max (levels above this still scale if obtained)
 #   weight: optional selection weight overriding rarity
 #   conflicts: optional list of namespaced enchantment IDs
+#   upgrade_of: namespaces ancestor, e.g. enchantssquared:soul_capture
+#   upgrade_method: ANVIL (book containing the upgraded enchant on right)
+#   required_level: minimum existing ancestor enchantment level on left
+#   result_level: new enchant level after evolution
+#   inherit_level: true -> carry original actual level incl. VI+; false -> use result_level
+#   Registry excludes all evolution relatives so versions cannot stack.
 #   acquisition: 0..1 chance per eligible enchanting/trade/fishing/chest/mob event
 #   attribute: optional map of Bukkit attribute keys / VALHALLA:<STAT>
 #   scale_per_level: optional attribute increment per actual level
@@ -94,6 +100,38 @@ enchants:
             capture_named_mobs: true
             capture_tamed_mobs: false
             capture_invulnerable_mobs: false
+            max_snapshot_chars: 131072
+
+  # Disabled example: Soul Capture III + Greater Soul Capture enchanted
+  # book in an anvil -> Greater Soul Capture I, replacing Soul Capture.
+  # Enable and FULLY RESTART to register this new native enchant ID.
+  greater_soul_capture:
+    enabled: false
+    name: Greater Soul Capture
+    type: weapon
+    rarity: legendary
+    max_level: 5
+    weight: 1
+    upgrade_of: enchantssquared:soul_capture
+    upgrade_method: ANVIL
+    required_level: 3
+    result_level: 1
+    inherit_level: false
+    acquisition:
+      enchanting: 0.0
+      villager_trade: 0.001
+      fishing: 0.0
+      structure_chest: 0.01
+      mob_drop: 0.001
+    triggers:
+      ON_HIT:
+        chance: 0.05
+        chance_per_level: 0.02
+        cooldown_seconds: 5
+        actions:
+          - type: CAPTURE_MOB
+            blocked_mobs: [WITHER, ENDER_DRAGON, WARDEN]
+            capture_tamed_mobs: false
             max_snapshot_chars: 131072
 
   # Example: a simple weapon enchant with Slowness I on hit.
