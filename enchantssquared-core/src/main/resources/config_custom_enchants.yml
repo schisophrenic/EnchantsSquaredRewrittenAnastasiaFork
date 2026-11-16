@@ -1,0 +1,166 @@
+# SIMPLE, SERVER-OWNER-FRIENDLY CUSTOM ENCHANTMENTS
+#
+# Add a new key under 'enchants' and completely restart Purpur.
+# Paper automatically registers it as enchantssquared:<your_key>.
+# There is NO need to edit Java or build a custom plugin JAR.
+#
+# Fields:
+#   enabled: true/false
+#   name: text shown on the item
+#   type: weapon | armor | boots | bow | mining | fishing
+#   items: optional Paper item tags/IDs (overrides default for type)
+#   slots: optional [mainhand], [armor] (overrides default for type)
+#   rarity: common | uncommon | rare | epic | legendary
+#   max_level: normal max (levels above this still scale if obtained)
+#   weight: optional selection weight overriding rarity
+#   conflicts: optional list of namespaced enchantment IDs
+#   acquisition: 0..1 chance per eligible enchanting/trade/fishing/chest/mob event
+#   attribute: optional map of Bukkit attribute keys / VALHALLA:<STAT>
+#   scale_per_level: optional attribute increment per actual level
+#   attribute_operation: ADD_NUMBER / ADD_SCALAR / MULTIPLY_SCALAR_1
+#   triggers: event names -> chance, chance_per_level, cooldown_seconds, actions
+#
+# Supported triggers:
+#   ON_HIT      - wearer's direct melee hit (allow_projectiles: true for bow hits)
+#   ON_DAMAGED  - wearer is attacked
+#   ON_KILL     - wearer defeats a living entity
+#   ON_MINE     - wearer breaks a block
+#   ON_SHOOT    - wearer fires a bow or crossbow
+#   ON_FISH     - wearer successfully catches an item/fish
+#   ON_INTERACT - wearer right-clicks with enchanted item
+#
+# Supported actions in any trigger.actions list:
+#   CAPTURE_MOB  - capture an eligible target into a real native spawn egg
+#   POTION       - potion: SLOWNESS, target: ENEMY|SELF, duration_ticks etc.
+#   HEAL         - amount, per_level; target: SELF|ENEMY
+#   DAMAGE       - amount, per_level; adds to triggered attack's damage
+#   IGNITE       - ticks, ticks_per_level; target: ENEMY|SELF
+#   KNOCKBACK    - strength, per_level; target: ENEMY|SELF
+#   EXPERIENCE   - amount, per_level
+#   MESSAGE      - message, placeholders {level}, {target}, {enchant}
+#
+# All actions can have their own additional chance: 0.0..1.0.
+# Attack/wearer triggers will not bypass cancelled damage or protected mobs.
+# Armor type sums enchant levels across ALL armor pieces. Trigger cooldown
+# applies per player+enchant+trigger, not per individual armor piece.
+#
+# To make passive attribute enchants, set 'attribute' directly on the enchant;
+# no action trigger is needed. ValhallaMMO may contribute separate stats.
+#
+# IMPORTANT:
+#   Only one native enchant with a given key is allowed (no ID conflicts with
+#   config_native_enchants.yml). Do not use /reload; full server restart.
+#   This is BETA; backup your world and inventories before enabling captures.
+
+enchants:
+  soul_capture:
+    enabled: true
+    name: Soul Capture
+    type: weapon
+    rarity: legendary
+    max_level: 3
+    weight: 1
+    min_cost_base: 24
+    min_cost_per_level: 14
+    max_cost_base: 60
+    max_cost_per_level: 14
+    anvil_cost: 10
+    conflicts: []
+    acquisition:
+      enchanting: 0.005
+      villager_trade: 0.003
+      fishing: 0.001
+      structure_chest: 0.015
+      mob_drop: 0.003
+    triggers:
+      ON_HIT:
+        # Chance 2% at level I, 3% at level II, 4% at level III.
+        # Real enchant levels above III still increase the proc chance.
+        chance: 0.02
+        chance_per_level: 0.01
+        cooldown_seconds: 5
+        allow_projectiles: false
+        require_target: true
+        actions:
+          - type: CAPTURE_MOB
+            # A real mob spawn egg, not a head: NBT-backed EntitySnapshot
+            # preserves mob health, attributes, armor, potion effects,
+            # custom name, and supported entity-specific state.
+            allowed_mobs: []  # Empty means any valid, unprotected egg-capable mob
+            blocked_mobs:
+              - WITHER
+              - ENDER_DRAGON
+              - WARDEN
+            capture_named_mobs: true
+            capture_tamed_mobs: false
+            capture_invulnerable_mobs: false
+            max_snapshot_chars: 131072
+
+  # Example: a simple weapon enchant with Slowness I on hit.
+  # Enable it to register the enchant on next server restart.
+  frostbite:
+    enabled: false
+    name: Frostbite
+    type: weapon
+    rarity: rare
+    max_level: 5
+    acquisition:
+      enchanting: 0.03
+      villager_trade: 0.01
+      fishing: 0.005
+      structure_chest: 0.03
+      mob_drop: 0.01
+    triggers:
+      ON_HIT:
+        chance: 0.15
+        chance_per_level: 0.04
+        cooldown_seconds: 0
+        actions:
+          - type: POTION
+            potion: SLOWNESS
+            target: ENEMY
+            duration_ticks: 60
+            duration_per_level: 20
+            amplifier: 0
+
+  # Example: heal on kill with a sword.
+  renewal:
+    enabled: false
+    name: Renewal
+    type: weapon
+    rarity: uncommon
+    max_level: 4
+    acquisition:
+      enchanting: 0.05
+      villager_trade: 0.02
+      fishing: 0.01
+      structure_chest: 0.035
+      mob_drop: 0.01
+    triggers:
+      ON_KILL:
+        chance: 0.20
+        chance_per_level: 0.10
+        cooldown_seconds: 2
+        actions:
+          - type: HEAL
+            target: SELF
+            amount: 1.0
+            per_level: 0.5
+
+  # Example: a completely passive armor attribute enchantment.
+  grounded:
+    enabled: false
+    name: Grounded
+    type: boots
+    rarity: common
+    max_level: 10
+    acquisition:
+      enchanting: 0.05
+      villager_trade: 0.03
+      fishing: 0.01
+      structure_chest: 0.03
+      mob_drop: 0.01
+    attribute:
+      GRAVITY: 0.01
+    scale_per_level: 0.01
+    attribute_operation: ADD_NUMBER
