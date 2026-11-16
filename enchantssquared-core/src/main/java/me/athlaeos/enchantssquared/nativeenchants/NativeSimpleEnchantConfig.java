@@ -105,6 +105,18 @@ public final class NativeSimpleEnchantConfig {
             nativeConfig.set(root + "tradeable", false);
             nativeConfig.set(root + "treasure", entry.getBoolean("treasure", false));
             nativeConfig.set(root + "exclusive_set", entry.getStringList("conflicts"));
+            // Passive attributes are also supported by the already existing
+            // Bukkit + ValhallaMMO NativeAttributeEnchantEngine.
+            ConfigurationSection attributes = entry.getConfigurationSection("attribute");
+            if (attributes != null) {
+                for (String key : attributes.getKeys(false)) {
+                    nativeConfig.set(root + "attribute." + key, attributes.get(key));
+                }
+                nativeConfig.set(root + "scale_per_level",
+                        entry.getDouble("scale_per_level", 0));
+                nativeConfig.set(root + "attribute_operation",
+                        entry.getString("attribute_operation", "ADD_NUMBER"));
+            }
             ConfigurationSection acquisition = entry.getConfigurationSection("acquisition");
             if (acquisition != null) {
                 for (String source : List.of("enchanting","villager_trade","fishing","structure_chest","mob_drop")) {
