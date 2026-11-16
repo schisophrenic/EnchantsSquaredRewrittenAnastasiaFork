@@ -1,7 +1,6 @@
 package me.athlaeos.enchantssquared.nativeenchants;
 
 import me.athlaeos.enchantssquared.EnchantsSquared;
-import me.athlaeos.valhallammo.utility.EntityUtils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,6 +13,7 @@ import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -192,12 +192,37 @@ public final class NativeProtectionEnchantListener implements Listener {
         };
     }
 
+    // Keep runtime class loading independent of the optional ValhallaMMO JAR.
+    private static Method customTypeMethod;
+    private static boolean customTypeResolved;
+
     private static String customDamageType(LivingEntity entity) {
         if (!EnchantsSquared.isValhallaHooked()) return null;
+        if (!customTypeResolved) {
+            customTypeResolved = true;
+            var plugin = org.bukkit.Bukkit.getPluginManager().getPlugin("ValhallaMMO");
+            if (plugin != null) {
+                try {
+                    Class<?> utils = Class.forName("me.athlaeos.valhallammo.utility.EntityUtils",
+                            false, plugin.getClass().getClassLoader());
+                    for (Method method : utils.getMethods()) {
+                        if (!method.getName().equals("getCustomDamageType")
+                                || method.getParameterCount() != 1) continue;
+                        if (method.getParameterTypes()[0].isAssignableFrom(LivingEntity.class)) {
+                            customTypeMethod = method;
+                            break;
+                        }
+                    }
+                } catch (ClassNotFoundException | LinkageError ignored) {
+                    // Optional integration is unavailable; vanilla causes still work.
+                }
+            }
+        }
+        if (customTypeMethod == null) return null;
         try {
-            String type = EntityUtils.getCustomDamageType(entity);
-            return type == null ? null : type.toUpperCase(Locale.ROOT);
-        } catch (LinkageError ignored) {
+            Object result = customTypeMethod.invoke(null, entity);
+            return result == null ? null : result.toString().toUpperCase(Locale.ROOT);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
             return null;
         }
     }
