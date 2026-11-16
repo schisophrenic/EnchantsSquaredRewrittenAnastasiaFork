@@ -36,10 +36,12 @@ public final class NativeYamlEffectListener implements Listener {
 
     private record BoundEffect(String handler, ConfigurationSection definition) {}
 
+    private final EnchantmentPriority priority;
     private final Map<Enchantment, BoundEffect> registered = new LinkedHashMap<>();
     private final Map<String, NativeEffectHandler> handlers = new LinkedHashMap<>();
 
     public NativeYamlEffectListener(YamlConfiguration configuration) {
+        priority = new EnchantmentPriority(configuration.getConfigurationSection("priority_scaling"));
         registerHandler("melee_flat_bonus", (event, level, def) -> {
             double bonus = value(def, level);
             event.setDamage(Math.max(0, event.getDamage() + bonus));
@@ -123,7 +125,16 @@ public final class NativeYamlEffectListener implements Listener {
             if (level <= 0) continue;
             BoundEffect effect = entry.getValue();
             NativeEffectHandler handler = handlers.get(effect.handler());
-            if (handler != null) handler.apply(event, level, effect.definition());
+            if (handler == null) continue;
+            double before = event.getDamage();
+            handler.apply(event, level, effect.definition());
+            // Only scale the DAMAGE contributed by an enchant, not other effects.
+            String id = entry.getKey().getKey().getKey();
+            String family = id.replaceFirst("^(lesser|advanced|supreme)_", "");
+            if (EnchantmentPriority.OFFENSE.contains(family)) {
+                double fraction = priority.multiplier(weapon, family, false);
+                event.setDamage(Math.max(0, before + (event.getDamage() - before) * fraction));
+            }
         }
     }
 
