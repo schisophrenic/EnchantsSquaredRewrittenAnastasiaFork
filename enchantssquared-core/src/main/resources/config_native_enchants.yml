@@ -1944,6 +1944,8 @@ perk_enchantments:
 # Splits always total ten points; highest-priority PRESENT family goes first.
 # A single family retains 100% effectiveness.
 priority_scaling:
+  defense_order: [protection, magic_protection, projectile_protection, blast_protection, fire_protection]
+  offense_order: [sharpness, smite, bane_of_arthropods]
   enabled: true
   defense:
     '1': [10]
