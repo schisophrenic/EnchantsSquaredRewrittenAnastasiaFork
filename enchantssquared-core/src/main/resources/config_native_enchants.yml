@@ -1938,3 +1938,20 @@ perk_enchantments:
     fixed_level: 1
     # Increases enchantment level by one for every +150 quality above 850.
     quality_per_level: 150
+
+# Runtime-only priority scaling for armor and melee enchants.
+# Works with EnchantsSquared on its own; ValhallaMMO is optional.
+# Splits always total ten points; highest-priority PRESENT family goes first.
+# A single family retains 100% effectiveness.
+priority_scaling:
+  enabled: true
+  defense:
+    '1': [10]
+    '2': [5, 5]
+    '3': [5, 3, 2]
+    '4': [4, 2, 2, 2]
+    '5': [3, 2, 2, 2, 1]
+  offense:
+    '1': [10]
+    '2': [5, 5]
+    '3': [5, 3, 2]
