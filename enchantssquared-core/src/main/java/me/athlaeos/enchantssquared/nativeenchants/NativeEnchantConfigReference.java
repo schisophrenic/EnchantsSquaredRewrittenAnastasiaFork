@@ -92,6 +92,7 @@ public final class NativeEnchantConfigReference {
         } catch (Exception ex) {
             plugin.getLogger().warning("Could not write native enchant YAML reference: " + ex.getMessage());
         }
+    }
 
     /** Append API-generated attribute names and complete supported action keys to the easy YAML. */
     private static void refreshEasyEnchantGuide(EnchantsSquared plugin, List<String> vanilla) {
@@ -146,6 +147,5 @@ public final class NativeEnchantConfigReference {
         } catch (Exception ex) {
             plugin.getLogger().warning("Could not write custom enchant reference: " + ex.getMessage());
         }
-    }
     }
 }
