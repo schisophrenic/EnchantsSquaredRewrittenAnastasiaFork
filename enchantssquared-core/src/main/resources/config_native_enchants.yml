@@ -1565,6 +1565,60 @@ enchantments:
       handler: none
 
 
+
+  # Unique summon enchant. The armor wearer may have it on multiple pieces:
+  # their ACTUAL levels are added for probability/count/duration scaling.
+  # Summoned mobs get effective Bukkit attributes and a snapshot of their
+  # ValhallaMMO combat stats, but never copy the owner's physical equipment.
+  summoner:
+    enabled: true
+    display_name: Summoner
+    enchant_type: armor
+    rarity: epic
+    supported_items: ["#minecraft:enchantable/armor"]
+    slots: [armor]
+    weight: 2
+    max_level: 3
+    min_cost_base: 20
+    min_cost_per_level: 12
+    max_cost_base: 55
+    max_cost_per_level: 12
+    anvil_cost: 8
+    table_obtainable: false
+    tradeable: false
+    acquisition:
+      enchanting: 0.012
+      villager_trade: 0.008
+      fishing: 0.005
+      structure_chest: 0.025
+      mob_drop: 0.007
+    effect:
+      handler: summon_ally
+    summon:
+      trigger: ON_DAMAGED
+      mob_types:
+        - WOLF
+        - IRON_GOLEM
+      chance_at_level_1: 0.22
+      chance_per_level: 0.06
+      cooldown_seconds: 25
+      initial_count: 1
+      additional_count_per_level: 1
+      max_per_trigger: 3
+      max_active_per_owner: 6
+      duration_seconds: 30
+      duration_per_level: 5
+      max_duration_seconds: 90
+      follow_distance: 14.0
+      dismiss_distance: 42.0
+      help_owner_attack: true
+      copy_bukkit_attributes: true
+      # none / combat / all. Combat includes ValhallaMMO defensive,
+      # offensive, elemental, movement, critical, bleed and heal stats.
+      # Snapshot at spawn, not a dynamically updating player mirror.
+      copy_valhalla_stats: combat
+      valhalla_stat_multiplier: 1.0
+
 # A family is selected from its vanilla enchant, using NG/perk/quality gates.
 # The player must have enchanting_perk_sharpnesses for these offensive tiers.
 #
