@@ -2,13 +2,18 @@ package me.athlaeos.enchantssquared.nativeenchants;
 
 import me.athlaeos.enchantssquared.EnchantsSquared;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeLowQualityEquipmentLoot;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -44,6 +49,8 @@ public final class NativeEnchantLootListener implements Listener {
     private final EnchantsSquared plugin;
     private final List<Entry> pool = new ArrayList<>();
     private final YamlConfiguration config;
+    private static final NamespacedKey ELITE_MOB = new NamespacedKey("valhallaequipment", "elite_mob_v1");
+    private final List<Enchantment> vanillaBookPool = new ArrayList<>();
 
     public NativeEnchantLootListener(EnchantsSquared plugin, YamlConfiguration config) {
         this.plugin = plugin;
@@ -65,7 +72,15 @@ public final class NativeEnchantLootListener implements Listener {
             pool.add(new Entry(enchantment,
                     section.getString("rarity", "common").toLowerCase(Locale.ROOT), Map.copyOf(chances)));
         }
-        EnchantsSquared.logInfo("Loaded " + pool.size() + " random native enchantment loot candidates.");
+        for (Enchantment enchant : Registry.ENCHANTMENT) {
+            if (enchant.getKey().getNamespace().equals("minecraft")
+                    && !enchant.getKey().getKey().startsWith("binding_curse")
+                    && !enchant.getKey().getKey().startsWith("vanishing_curse")) {
+                vanillaBookPool.add(enchant);
+            }
+        }
+        EnchantsSquared.logInfo("Loaded " + pool.size()
+                + " native and " + vanillaBookPool.size() + " vanilla enchanted-book candidates.");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -97,63 +112,175 @@ public final class NativeEnchantLootListener implements Listener {
         event.setRecipe(modified);
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    // A single roll per catch. Vanilla enchanted books are not an extra
+    // independent source: replace the caught book unless this roll succeeds.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onFish(PlayerFishEvent event) {
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH
                 || !(event.getCaught() instanceof Item caught)) return;
-        ItemStack generatedGear = chanceForEquipment("fishing")
-                ? makeEquipment("fishing") : null;
-        if (generatedGear != null) {
-            caught.setItemStack(generatedGear);
-            return;
+        if (chance("elite_enchanted_books.fishing_chance", 0.00002)) {
+            ItemStack book = randomEliteBook();
+            if (book != null) {
+                caught.setItemStack(book);
+                return;
+            }
         }
-        Entry roll = choose("fishing", caught.getItemStack());
-        if (roll != null) caught.setItemStack(book(roll));
+        ItemStack gear = chanceForEquipment("fishing") ? makeEquipment("fishing") : null;
+        if (gear != null) caught.setItemStack(gear);
+        else if (caught.getItemStack().getType() == Material.ENCHANTED_BOOK)
+            caught.setItemStack(new ItemStack(Material.COD));
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onNaturalChest(LootGenerateEvent event) {
         LootTable table = event.getLootTable();
         if (table == null || !table.getKey().toString().startsWith("minecraft:chests/")) return;
         List<ItemStack> items = new ArrayList<>(event.getLoot());
+        // Remove pre-existing vanilla books so the rate is exactly one
+        // chest-wide roll rather than multiple independent item rolls.
+        items.removeIf(item -> item != null && item.getType() == Material.ENCHANTED_BOOK);
+        for (ItemStack item : items) {
+            enchantEquipment(item, "elite_enchanted_books.equipment_enchant_chance", 0.20);
+        }
         ItemStack gear = chanceForEquipment("structure_chest") ? makeEquipment("structure_chest") : null;
         if (gear != null) items.add(gear);
-        Entry roll = choose("structure_chest", new ItemStack(Material.ENCHANTED_BOOK));
-        if (roll != null) items.add(book(roll));
-        if (gear != null || roll != null) event.setLoot(items);
+        if (chance("elite_enchanted_books.chest_chance", 0.00002)) {
+            ItemStack book = randomEliteBook();
+            if (book != null) items.add(book);
+        }
+        event.setLoot(items);
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEliteSpawn(CreatureSpawnEvent event) {
+        LivingEntity mob = event.getEntity();
+        // ValhallaEquipment assigns its elite PDC tag during its own spawn
+        // handler. Wait until the tag and equipment are finalized.
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!mob.isValid() || !elite(mob)) return;
+            EntityEquipment equipment = mob.getEquipment();
+            if (equipment == null) return;
+            ItemStack[] armor = equipment.getArmorContents();
+            for (ItemStack item : armor)
+                enchantEquipment(item, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+            equipment.setArmorContents(armor);
+            ItemStack weapon = equipment.getItemInMainHand();
+            enchantEquipment(weapon, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+            equipment.setItemInMainHand(weapon);
+        }, 2L);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onMobDrops(EntityDeathEvent event) {
         if (event.getEntity() instanceof Player) return;
+        // Prevent multiple stacked enchanted-book drops from lower priority
+        // loot handlers; normal equipment and non-book drops stay intact.
+        event.getDrops().removeIf(item -> item != null && item.getType() == Material.ENCHANTED_BOOK);
+
         ItemStack gear = chanceForEquipment("mob_drop") ? makeEquipment("mob_drop") : null;
         if (gear != null) event.getDrops().add(gear);
-        Entry roll = choose("mob_drop", new ItemStack(Material.ENCHANTED_BOOK));
-        if (roll != null) event.getDrops().add(book(roll));
+
+        if (!elite(event.getEntity())) return;
+        for (ItemStack item : event.getDrops())
+            enchantEquipment(item, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+
+        if (!config.getBoolean("elite_enchanted_books.enabled", true)
+                || (config.getBoolean("elite_enchanted_books.require_player_kill", true)
+                && event.getEntity().getKiller() == null)) return;
+        if (!chance("elite_enchanted_books.chance", 0.02)) return;
+        ItemStack book = randomEliteBook();
+        if (book != null) event.getDrops().add(book);
+    }
+
+    private boolean elite(LivingEntity mob) {
+        return Bukkit.getPluginManager().isPluginEnabled("ValhallaEquipment")
+                && mob.getPersistentDataContainer()
+                .getOrDefault(ELITE_MOB, PersistentDataType.BYTE, (byte) 0) != 0;
+    }
+
+    private boolean chance(String path, double fallback) {
+        if (!config.getBoolean("elite_enchanted_books.enabled", true)) return false;
+        double value = config.getDouble(path, fallback);
+        return Double.isFinite(value) && ThreadLocalRandom.current().nextDouble()
+                < Math.max(0.0, Math.min(1.0, value));
+    }
+
+    // Mutates an eligible generated piece only, never its quality, lore,
+    // ValhallaEquipment model or custom persistent data.
+    private void enchantEquipment(ItemStack item, String path, double defaultChance) {
+        if (item == null || item.getType().isAir()
+                || item.getType() == Material.ENCHANTED_BOOK || !chance(path, defaultChance)) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        List<Enchantment> candidates = new ArrayList<>();
+        for (Enchantment enchant : vanillaBookPool) {
+            if (enchant.canEnchantItem(item) && compatible(enchant, meta)) candidates.add(enchant);
+        }
+        ConfigurationSection definitions = config.getConfigurationSection("enchantments");
+        if (definitions != null) for (String id : definitions.getKeys(false)) {
+            if (!definitions.getBoolean(id + ".enabled", true)
+                    || id.startsWith("lesser_") || id.startsWith("advanced_")
+                    || id.startsWith("supreme_")) continue;
+            Enchantment enchant = Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id));
+            if (enchant != null && enchant.canEnchantItem(item) && compatible(enchant, meta))
+                candidates.add(enchant);
+        }
+        if (candidates.isEmpty()) return;
+        Enchantment enchantment = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+        meta.addEnchant(enchantment, level(enchantment), true);
+        item.setItemMeta(meta);
+    }
+
+    private static boolean compatible(Enchantment enchantment, ItemMeta meta) {
+        return meta.getEnchants().keySet().stream()
+                .noneMatch(existing -> existing.conflictsWith(enchantment)
+                        || enchantment.conflictsWith(existing)
+                        || existing.equals(enchantment));
+    }
+
+    /**
+     * Select exactly one enabled enchantment per successful loot roll.
+     * Vanilla enchantments have weight 1; native entries use rarity weights.
+     * Progression-gated tier enchantments are never granted as random loot.
+     */
+    private ItemStack randomEliteBook() {
+        ConfigurationSection definitions = config.getConfigurationSection("enchantments");
+        List<Entry> nativeCandidates = new ArrayList<>();
+        double totalWeight = vanillaBookPool.size();
+        if (definitions != null) {
+            for (String id : definitions.getKeys(false)) {
+                if (!definitions.getBoolean(id + ".enabled", true)
+                        || id.startsWith("lesser_") || id.startsWith("advanced_")
+                        || id.startsWith("supreme_")) continue;
+                Enchantment enchant = Registry.ENCHANTMENT.get(
+                        new NamespacedKey("enchantssquared", id));
+                if (enchant == null) continue;
+                Entry entry = new Entry(enchant,
+                        definitions.getString(id + ".rarity", "rare"), Map.of());
+                nativeCandidates.add(entry);
+                totalWeight += rarityWeight(entry.rarity());
+            }
+        }
+        if (totalWeight <= 0) return null;
+        double selected = ThreadLocalRandom.current().nextDouble() * totalWeight;
+        for (Enchantment enchant : vanillaBookPool) {
+            selected -= 1.0;
+            if (selected < 0) return book(enchant);
+        }
+        for (Entry entry : nativeCandidates) {
+            selected -= rarityWeight(entry.rarity());
+            if (selected < 0) return book(entry);
+        }
+        return nativeCandidates.isEmpty()
+                ? book(vanillaBookPool.get(vanillaBookPool.size() - 1))
+                : book(nativeCandidates.get(nativeCandidates.size() - 1));
     }
 
     private ItemStack makeEquipment(String source) {
         if (!EnchantsSquared.isValhallaHooked()) return null;
         ItemStack item = NativeLowQualityEquipmentLoot.create(config);
         if (item == null || item.getType().isAir()) return null;
-
-        // Optional enchanted natural gear, after ValhallaEquipment has rolled
-        // its native quality/class/model/stats. Keep PDC and item model intact.
-        double chance = Math.max(0.0, Math.min(1.0,
-                config.getDouble("loot_equipment.native_enchant_chance", 0.20)));
-        if (ThreadLocalRandom.current().nextDouble() >= chance) return item;
-
-        // Only draw from this source's native enchant loot pool, not NG tiered
-        // enchantments (those have no acquisition entries by default).
-        Entry roll = chooseCompatible(source, item);
-        if (roll == null) return item;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || !roll.enchant().canEnchantItem(item)) return item;
-        for (Enchantment existing : meta.getEnchants().keySet()) {
-            if (roll.enchant().conflictsWith(existing) || existing.conflictsWith(roll.enchant())) return item;
-        }
-        meta.addEnchant(roll.enchant(), level(roll.enchant()), true);
-        item.setItemMeta(meta);
+        enchantEquipment(item, "elite_enchanted_books.equipment_enchant_chance", 0.20);
         return item;
     }
 
@@ -219,9 +346,13 @@ public final class NativeEnchantLootListener implements Listener {
     }
 
     private static ItemStack book(Entry roll) {
+        return book(roll.enchant());
+    }
+
+    private static ItemStack book(Enchantment enchantment) {
         ItemStack item = new ItemStack(Material.ENCHANTED_BOOK);
         if (item.getItemMeta() instanceof EnchantmentStorageMeta meta) {
-            meta.addStoredEnchant(roll.enchant(), level(roll.enchant()), true);
+            meta.addStoredEnchant(enchantment, level(enchantment), true);
             item.setItemMeta(meta);
         }
         return item;
