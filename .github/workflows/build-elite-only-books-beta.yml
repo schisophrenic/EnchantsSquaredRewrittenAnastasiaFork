@@ -52,23 +52,23 @@ jobs:
       - name: Stage EnchantsSquared test JAR
         run: |
           mkdir -p dist-test
-          ls -lh target/EnchantsSquared_2.7.jar
-          test -s target/EnchantsSquared_2.7.jar
-          jar tf target/EnchantsSquared_2.7.jar | grep -Fx 'plugin.yml'
-          jar tf target/EnchantsSquared_2.7.jar | grep -Fx 'paper-plugin.yml'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantmentBootstrap.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'ValhallaTierEnchantingListener.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeSummonerEnchantListener.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeSummonValhallaBridge.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeSimpleEnchantConfig.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeCustomEnchantActions.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeCapturedMobEggs.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -Fx 'config_custom_enchants.yml'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantmentEvolution.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'EnchantmentPriority.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'VanillaAttackPriorityListener.class'
-          jar tf target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantLootListener.class'
-          cp target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_Elite_Books_BETA.jar
+          ls -lh enchantssquared-dist/target/EnchantsSquared_2.7.jar
+          test -s enchantssquared-dist/target/EnchantsSquared_2.7.jar
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'plugin.yml'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'paper-plugin.yml'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantmentBootstrap.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'ValhallaTierEnchantingListener.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeSummonerEnchantListener.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeSummonValhallaBridge.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeSimpleEnchantConfig.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeCustomEnchantActions.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeCapturedMobEggs.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -Fx 'config_custom_enchants.yml'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantmentEvolution.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'EnchantmentPriority.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'VanillaAttackPriorityListener.class'
+          jar tf enchantssquared-dist/target/EnchantsSquared_2.7.jar | grep -F 'NativeEnchantLootListener.class'
+          cp enchantssquared-dist/target/EnchantsSquared_2.7.jar dist-test/EnchantsSquared_Elite_Books_BETA.jar
       - name: Upload downloadable test plugin
         uses: actions/upload-artifact@v4
         with:
