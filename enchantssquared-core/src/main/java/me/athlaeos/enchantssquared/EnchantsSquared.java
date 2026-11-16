@@ -23,6 +23,7 @@ import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantConfigReference;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaAttributeBridge;
 import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.VanillaAttackPriorityListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeSimpleEnchantConfig;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantmentEvolution;
@@ -211,6 +212,7 @@ public final class EnchantsSquared extends JavaPlugin {
         registerListener(new NativeYamlEffectListener(nativeConfig));
         registerListener(new NativeRangedEnchantListener());
         registerListener(new NativeProtectionEnchantListener(nativeConfig));
+        registerListener(new VanillaAttackPriorityListener(nativeConfig));
         registerListener(new NativeSpecialEnchantListener(nativeConfig));
         // Summoned allies are real Paper mobs with a native armor enchant,
         // protection against owner-friendly fire, and short-lived stat mirrors.
