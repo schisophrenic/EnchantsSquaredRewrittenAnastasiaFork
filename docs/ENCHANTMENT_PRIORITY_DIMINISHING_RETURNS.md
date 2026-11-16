@@ -1,4 +1,4 @@
-# Enchantment priority / diminishing returns (design, not yet wired)
+# Enchantment priority / diminishing returns (BETA implementation)
 
 This feature is intended for Slimefun-generated or otherwise multi-enchanted armor and weapons. Existing levels and tier upgrades remain unchanged. This is a runtime calculation, not an item rewrite.
 
@@ -33,4 +33,18 @@ For example, a helmet with protection and fire_protection receives 50% of each e
 - Slimefun-forced combinations, smithing, anvil, enchant table, and stored books.
 - Ensure no double damage-reduction or duplicate bonus against incoming Valhalla custom types.
 
-Implementation status: SPEC ONLY. No listener/engine source has been modified by this commit.
+## Implemented (BETA)
+- EnchantmentPriority: per-item, configurable allocations and family ordering.
+- NativeProtectionEnchantListener: adjusts vanilla protection EPF, native protection and Magic Protection per armor piece; other armor and resistance systems stay separate.
+- NativeYamlEffectListener: scales native Sharpness, Smite and Bane bonus damage.
+- VanillaAttackPriorityListener: compensates for vanilla Sharpness, Smite and Bane bonus damage.
+- ValhallaMMO feature/enchantment-priority-compat-26-3: optional fallback, disabled automatically when EnchantsSquared is enabled.
+- Config: `config_native_enchants.yml` under `priority_scaling` (and ValhallaMMO `config.yml` under `enchantment_priority`).
+
+## Limitations / verification before release
+- Built-in fire-duration reduction and Bane slow effects need live integration verification; the priority weighting currently targets damage contributions.
+- Confirm EPF modifier ordering on Purpur 26.3, including custom ValhallaMMO damage types and other plugin listeners.
+- Verify attack enchant contribution formulas on Paper/Purpur 26.3 and detect plugins that replace vanilla damage entirely.
+- Test all combinations, enchantment tiers, Slimefun unsafe enchanted armor and weapons, and no-ValhallaMMO operation.
+- No successful server test or build certification is claimed by this document. Do not release as production-ready.
+
