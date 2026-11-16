@@ -46,7 +46,9 @@ jobs:
             -Dfile=valhallatrinkets-2.1.jar -DgroupId=me.athlaeos \
             -DartifactId=valhallatrinkets -Dversion=2.1 -Dpackaging=jar -DgeneratePom=true
       - name: Build all Maven modules
-        run: mvn -B -ntp -DskipTests -Dgpg.skip=true clean package
+        run: |
+          set -o pipefail
+          mvn -B -ntp -DskipTests -Dgpg.skip=true clean package 2>&1 | tee priority-maven-build.log
       - name: Stage EnchantsSquared test JAR
         run: |
           mkdir -p dist-test
@@ -70,6 +72,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EnchantsSquared-Enchantment-Priority-BETA
-          path: dist-test/EnchantsSquared_Enchantment_Evolution_BETA.jar
+          path: dist-test/EnchantsSquared_Enchantment_Priority_BETA.jar
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload Maven diagnostics if build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EnchantsSquared-Priority-Build-Logs
+          path: priority-maven-build.log
+          if-no-files-found: ignore
+          retention-days: 7
