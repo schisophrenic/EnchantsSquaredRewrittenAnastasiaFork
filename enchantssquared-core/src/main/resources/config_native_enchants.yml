@@ -33,6 +33,17 @@ blocked_base_enchants: [damage_reduction]
 # APIs (NOT an invented lore tag). When ValhallaEquipment is installed with
 # its natural-loot API, it rolls its OWN classes, properties, names and models
 # on the low-quality base. Old/missing Equipment plugin -> fallback roll.
+# Enchanted BOOK loot only: exactly one roll per player-killed
+# ValhallaEquipment elite mob (PDC: valhallaequipment:elite_mob_v1).
+# A 2% chance means an average of one book per 50 eligible elite kills.
+# Non-elite mobs, natural loot tables and fishing no longer supply book drops.
+# Enchanting tables, enchanted equipment and existing villager trades are unchanged.
+# Only changes newly generated loot; books already in inventories stay intact.
+elite_enchanted_books:
+  enabled: true
+  chance: 0.02
+  require_player_kill: true
+
 loot_equipment:
   enabled: true
   # Use ValhallaEquipment's own item-class/attribute/model generator when
