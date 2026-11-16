@@ -88,8 +88,64 @@ public final class NativeEnchantConfigReference {
             }
             guide.append("# === END AUTO-GENERATED REFERENCE ===\n");
             Files.writeString(path, guide.toString(), StandardCharsets.UTF_8);
+            refreshEasyEnchantGuide(plugin, vanilla);
         } catch (Exception ex) {
             plugin.getLogger().warning("Could not write native enchant YAML reference: " + ex.getMessage());
+        }
+    }
+
+    /** Append API-generated attribute names and complete supported action keys to the easy YAML. */
+    private static void refreshEasyEnchantGuide(EnchantsSquared plugin, List<String> vanilla) {
+        Path path = plugin.getDataFolder().toPath().resolve(NativeSimpleEnchantConfig.FILE_NAME);
+        final String marker = "# === AUTO-GENERATED EASY ENCHANT REFERENCE ===";
+        try {
+            if (!Files.exists(path)) return;
+            String text = Files.readString(path, StandardCharsets.UTF_8);
+            int old = text.indexOf(marker);
+            if (old >= 0) text = text.substring(0, old).stripTrailing();
+            StringBuilder out = new StringBuilder(text);
+            out.append("\n\n").append(marker).append("\n");
+            out.append("# These are COMMENTS only; generated from your installed APIs.\n");
+            out.append("# CUSTOM ENCHANT FIELDS: enabled, name, type, items, slots, rarity,\n");
+            out.append("# weight, max_level, conflicts, min_cost_base, min_cost_per_level,\n");
+            out.append("# max_cost_base, max_cost_per_level, anvil_cost, acquisition,\n");
+            out.append("# triggers, attribute, scale_per_level, attribute_operation.\n");
+            out.append("# TYPES: weapon, armor, boots, bow, mining, fishing.\n");
+            out.append("# RARITIES: common, uncommon, rare, epic, legendary.\n");
+            out.append("# TRIGGERS: ON_HIT, ON_DAMAGED, ON_KILL, ON_MINE,\n");
+            out.append("# ON_SHOOT, ON_FISH, ON_INTERACT.\n");
+            out.append("# TRIGGER OPTIONS: chance, chance_per_level, cooldown_seconds,\n");
+            out.append("# target_types, blocked_targets, allow_projectiles,\n");
+            out.append("# require_target, actions (list).\n");
+            out.append("# ACTIONS: CAPTURE_MOB, POTION, HEAL, DAMAGE, IGNITE,\n");
+            out.append("# KNOCKBACK, EXPERIENCE, MESSAGE.\n");
+            out.append("# ACTION OPTIONS: chance, target (SELF/ENEMY), amount,\n");
+            out.append("# per_level, potion, duration_ticks, duration_per_level,\n");
+            out.append("# amplifier, amplifier_per_level, ticks, ticks_per_level,\n");
+            out.append("# strength, message.\n");
+            out.append("# CAPTURE_MOB OPTIONS: allowed_mobs, blocked_mobs,\n");
+            out.append("# capture_named_mobs, capture_tamed_mobs,\n");
+            out.append("# capture_invulnerable_mobs, max_snapshot_chars.\n");
+            out.append("# ACQUISITION: enchanting, villager_trade, fishing,\n");
+            out.append("# structure_chest, mob_drop (all probabilities 0.0 to 1.0).\n");
+            out.append("# ATTRIBUTE OPERATIONS: ADD_NUMBER, ADD_SCALAR, MULTIPLY_SCALAR_1.\n");
+            out.append("# PSEUDO ATTRIBUTE: AIR_DRAG (not vanilla).\n");
+            out.append("# ALL BUKKIT ATTRIBUTE ENUM NAMES:\n");
+            for (String name : vanilla) out.append("#   ").append(name).append("\n");
+            if (EnchantsSquared.isValhallaHooked()) {
+                out.append("# ALL REGISTERED VALHALLAMMO STAT SOURCES (use VALHALLA: prefix):\n");
+                List<String> stats = new ArrayList<>(AccumulativeStatManager.getSources().keySet());
+                stats.sort(String::compareTo);
+                for (String stat : stats) out.append("#   VALHALLA:").append(stat).append("\n");
+                out.append("# ALL VALHALLAMMO ITEM ATTRIBUTE IDS (gear rolls):\n");
+                List<String> gear = new ArrayList<>(ItemAttributesRegistry.getRegisteredAttributes().keySet());
+                gear.sort(String::compareTo);
+                for (String attr : gear) out.append("#   ").append(attr).append("\n");
+            }
+            out.append("# === END AUTO-GENERATED EASY ENCHANT REFERENCE ===\n");
+            Files.writeString(path, out.toString(), StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            plugin.getLogger().warning("Could not write custom enchant reference: " + ex.getMessage());
         }
     }
 }

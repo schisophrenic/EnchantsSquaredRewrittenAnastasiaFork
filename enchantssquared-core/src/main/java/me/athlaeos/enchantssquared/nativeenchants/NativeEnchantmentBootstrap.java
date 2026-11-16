@@ -58,6 +58,9 @@ public final class NativeEnchantmentBootstrap implements PluginBootstrap {
     @Override
     public void bootstrap(BootstrapContext context) {
         YamlConfiguration configuration = loadConfig(context);
+        // Server-specific simple enchantments become real Paper-native
+        // registry entries before worlds load; no datapacks or Java rebuild.
+        NativeSimpleEnchantConfig.merge(context.getDataDirectory(), configuration);
         ConfigurationSection entries = configuration.getConfigurationSection("enchantments");
         if (entries == null) {
             context.getLogger().warn("No native enchantments found in config_native_enchants.yml");
