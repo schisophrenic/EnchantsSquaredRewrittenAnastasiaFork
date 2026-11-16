@@ -160,10 +160,13 @@ public final class NativeEnchantLootListener implements Listener {
             if (!mob.isValid() || !elite(mob)) return;
             EntityEquipment equipment = mob.getEquipment();
             if (equipment == null) return;
-            for (ItemStack item : equipment.getArmorContents())
+            ItemStack[] armor = equipment.getArmorContents();
+            for (ItemStack item : armor)
                 enchantEquipment(item, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
-            enchantEquipment(equipment.getItemInMainHand(),
-                    "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+            equipment.setArmorContents(armor);
+            ItemStack weapon = equipment.getItemInMainHand();
+            enchantEquipment(weapon, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+            equipment.setItemInMainHand(weapon);
         }, 2L);
     }
 
