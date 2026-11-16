@@ -136,7 +136,7 @@ public final class NativeEnchantLootListener implements Listener {
         event.setLoot(items);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onMobDrops(EntityDeathEvent event) {
         if (event.getEntity() instanceof Player) return;
         // Remove books added by lower-priority death listeners too. Do not
@@ -169,10 +169,14 @@ public final class NativeEnchantLootListener implements Listener {
         // progression belongs to ValhallaMMO enchanting quality and perks.
         List<Entry> nativeCandidates = new ArrayList<>();
         double total = vanillaBookPool.size();
-        for (Entry entry : pool) {
-            String id = entry.enchant().getKey().getKey();
-            if (id.startsWith("lesser_") || id.startsWith("advanced_") || id.startsWith("supreme_"))
-                continue;
+        ConfigurationSection definitions = config.getConfigurationSection("enchantments");
+        if (definitions != null) for (String id : definitions.getKeys(false)) {
+            if (!definitions.getBoolean(id + ".enabled", true)
+                    || id.startsWith("lesser_") || id.startsWith("advanced_")
+                    || id.startsWith("supreme_")) continue;
+            Enchantment enchant = Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id));
+            if (enchant == null) continue;
+            Entry entry = new Entry(enchant, definitions.getString(id + ".rarity", "rare"), Map.of());
             nativeCandidates.add(entry);
             total += rarityWeight(entry.rarity());
         }
