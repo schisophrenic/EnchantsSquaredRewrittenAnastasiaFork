@@ -17,6 +17,7 @@ import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantAliases;
 import me.athlaeos.enchantssquared.nativeenchants.NativeAttributeEnchantEngine;
 import me.athlaeos.enchantssquared.nativeenchants.NativeSpecialEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSummonerEnchantListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantLootListener;
 import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantConfigReference;
 import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaAttributeBridge;
@@ -52,6 +53,7 @@ public final class EnchantsSquared extends JavaPlugin {
     private static boolean trinketsHooked = false;
     private static boolean valhallaHooked = false;
     private NativeAttributeEnchantEngine nativeAttributeEngine;
+    private NativeSummonerEnchantListener nativeSummonerListener;
     private static boolean worldGuardHooked = false;
     private static boolean mcMMOHooked = false;
     private static boolean jobsHooked = false;
@@ -200,6 +202,13 @@ public final class EnchantsSquared extends JavaPlugin {
         registerListener(new NativeRangedEnchantListener());
         registerListener(new NativeProtectionEnchantListener(nativeConfig));
         registerListener(new NativeSpecialEnchantListener(nativeConfig));
+        // Summoned allies are real Paper mobs with a native armor enchant,
+        // protection against owner-friendly fire, and short-lived stat mirrors.
+        nativeSummonerListener = new NativeSummonerEnchantListener(this, nativeConfig);
+        if (nativeSummonerListener.enabled()) {
+            registerListener(nativeSummonerListener);
+            getServer().getScheduler().runTaskTimer(this, nativeSummonerListener, 20L, 20L);
+        }
         registerListener(new NativeEnchantLootListener(this, nativeConfig));
         nativeAttributeEngine = new NativeAttributeEnchantEngine(this, nativeConfig);
         if (valhallaHooked) {
@@ -251,6 +260,7 @@ public final class EnchantsSquared extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (nativeSummonerListener != null) nativeSummonerListener.shutdown();
         if (nativeAttributeEngine != null) nativeAttributeEngine.clean();
         // Plugin shutdown logic
         for (CustomEnchant e : CustomEnchantManager.getInstance().getAllEnchants().values()){

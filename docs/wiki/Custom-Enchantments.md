@@ -3,7 +3,7 @@
 > [!WARNING]
 > **Beta documentation (November 16, 2026).** This catalog describes the configuration and Java handlers in the [v2.7.0 beta branch](https://github.com/schisophrenic/EnchantsSquaredRewrittenAnastasiaFork/tree/release/beta-2026-11-16). In-game behavior on Purpur 26.3 requires testing. Disabled entries and placeholders are clearly marked.
 
-The beta source declares **67 original EnchantsSquared enchantments** and **53 Paper-native registry entries** (52 enabled by their default YAML). Some native entries are compatibility versions of original effects; the two counts are **not** a count of distinct effects.
+The beta source declares **67 original EnchantsSquared enchantments** and **54 Paper-native registry entries** (53 enabled by their default YAML). Some native entries are compatibility versions of original effects; the two counts are **not** a count of distinct effects.
 
 ## How to read this page
 
@@ -17,7 +17,7 @@ The beta source declares **67 original EnchantsSquared enchantments** and **53 P
 
 - [Original EnchantsSquared enchantments (67)](#original-enchantssquared-enchantments)
 - [Native Lesser, Advanced and Supreme families (12)](#native-lesser-advanced-and-supreme-families)
-- [Other native enchantments (17)](#other-native-enchantments)
+- [Other native enchantments (18)](#other-native-enchantments)
 - [Where to find native enchantments](#where-to-find-native-enchantments)
 - [Notes on disabled and mirrored enchantments](#notes-on-disabled-and-mirrored-enchantments)
 
@@ -205,6 +205,7 @@ The following are configured as separate native registry entries (not all introd
 | **Strafe** (`enchantssquared:strafe`) | Boosts partially charged arrows to approximate faster bow draws (not true Forge draw-speed behavior). | Bows | rare | 4 | Enabled; native handler / attribute system |
 | **Rapid Shot** (`enchantssquared:rapid_shot`) | Grants a 20-40-60% chance to shoot 2-3-4 arrows in quick succession. These arrows, except the last one, remove immunity frames from the hit target, but deal only 50-45-40% damage. | Bows | epic | 3 | Enabled; legacy-effect bridge (test native-only use) |
 | **Graviton** (`enchantssquared:graviton`) | Adds +0.01 gravity per enchantment level while equipped; levels above the usual max still scale. | Armor | rare | 10 | Enabled; native handler / attribute system |
+| **Summoner** (`enchantssquared:summoner`) | When the wearer takes a direct hit, has a configurable chance to summon loyal combat allies (default Wolves / Iron Golems). Summons inherit matching Bukkit attributes and a snapshot of ValhallaMMO combat stats; the owner and their allies cannot hurt each other. Cooldown, maximum active allies and lifespan are configurable. | Armor (helmet, chestplate, leggings, boots) | epic | 3 | Enabled; native summon AI and stat mirroring (beta) |
 | **Physical Protection** (`enchantssquared:physical_protection`) | Placeholder for physical damage mitigation; disabled and no Java effect handler. | Armor | epic | 4 | **Disabled; placeholder (no effect handler)** |
 
 ## Where to find native enchantments
@@ -227,6 +228,7 @@ Native custom entries can specify independent acquisition probabilities for the 
 | Strafe | 2.5% | 2.5% | 0.8% | 2.5% | 1.2% |
 | Rapid Shot | 0% | 0.8% | 0.5% | 2% | 1% |
 | Graviton | 3% | 1.5% | 0.6% | 3% | 1% |
+| Summoner | 1.2% | 0.8% | 0.5% | 2.5% | 0.7% |
 | Physical Protection | 0% | 0% | 0% | 0% | 0% |
 
 *An absent acquisition entry means this extra random-acquisition system does not select that enchantment directly; it may have another registered source such as a perk roll or an original plugin's system.*
@@ -239,6 +241,7 @@ Native custom entries can specify independent acquisition probabilities for the 
 - **Envenomed** is separate from Poisoning and Withering; **Disorientating Blade** is separate from Blinding and Nausea; **Crushing** and **Perforating** remain separate heavy/light armor counters; **Evasion** is separate from Natural Blocking; **Splitshot**, **Strafe**, and **Rapid Shot** are distinct bow mechanics.
 - Some native entries intentionally mirror original enchants (Life Steal/Vampiric, Adept/Sapping, Strengthened Vitality/Vitality, Smelter/Sunforged, Lava Walker, Dragging/Pulling, Penetrating Edge/Piercer, Natural Blocking/Shielding, Rapid Shot). The source still has legacy handlers; test native-only books before advertising both representations as independently operational.
 - **Magic Protection** currently caps enchantment-derived elemental damage reduction at 85% across armor. Independent armor, potion and ValhallaMMO resistance systems may separately modify final damage.
+- **Summoner** (`enchantssquared:summoner`) is an Epic armor enchant that reacts to damage by a living attacker. Level scaling uses the sum of levels on worn armor, including overleveled items. Summons cannot damage their owner or other summons belonging to the same owner; owner attacks and projectiles cannot hurt them. Vanilla attributes are copied only where the mob entity supports them; ValhallaMMO combat stats are resolved once at spawn, not dynamically mirrored. Its full live-server behavior is still in beta testing.
 - **Graviton** uses the real Bukkit gravity attribute. `AIR_DRAG` is a custom plugin movement-effect key, not a vanilla attribute.
 - The older So Many Enchantments mod's other enchantments are **not all implemented** in this beta. This catalog lists only the entries supported by the current source.
 
