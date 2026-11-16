@@ -27,6 +27,7 @@ import me.athlaeos.enchantssquared.utility.Utils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -161,25 +162,40 @@ public class CustomEnchantManager {
         return possibleEnchants;
     }
 
+    public Enchantment getNativeEnchantment(CustomEnchant enchantment){
+        if (enchantment == null) return null;
+        return Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", enchantment.getType().toLowerCase(Locale.ROOT)));
+    }
+
+    public boolean hasNativeRegistryEnchantments(){
+        return allEnchants.values().stream().anyMatch(e -> getNativeEnchantment(e) != null);
+    }
+
     public void setItemEnchants(ItemStack item, Map<CustomEnchant, Integer> enchantments){
         if (ItemUtils.isAirOrNull(item)) return;
+        if (!enchantments.isEmpty() && item.getType() == Material.BOOK) item.setType(Material.ENCHANTED_BOOK);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
-        if (enchantments.isEmpty()){
-            if (meta.getPersistentDataContainer().has(enchantmentsKey, PersistentDataType.STRING)){
-                meta.getPersistentDataContainer().remove(enchantmentsKey);
-                item.setItemMeta(meta);
-                meta = item.getItemMeta();
-            }
-        } else {
-            if (item.getType() == Material.BOOK) item.setType(Material.ENCHANTED_BOOK);
 
-            //updating PersistentDataContainer to be accurate with enchantments
-            Collection<String> stringEnchants = new HashSet<>();
-            enchantments.forEach((e, l) -> stringEnchants.add(allEnchants.inverse().get(e) + ":" + l));
-            meta = item.getItemMeta();
-            meta.getPersistentDataContainer().set(enchantmentsKey, PersistentDataType.STRING, String.join(";", stringEnchants));
+        // Remove only previously owned native enchantments; other plugins' enchants are untouched.
+        for (CustomEnchant enchantment : allEnchants.values()){
+            Enchantment nativeEnchantment = getNativeEnchantment(enchantment);
+            if (nativeEnchantment == null) continue;
+            if (meta instanceof EnchantmentStorageMeta book) book.removeStoredEnchant(nativeEnchantment);
+            else meta.removeEnchant(nativeEnchantment);
         }
+        Collection<String> legacy = new HashSet<>();
+        for (Map.Entry<CustomEnchant, Integer> entry : enchantments.entrySet()){
+            int level = entry.getValue();
+            if (level <= 0) continue;
+            Enchantment nativeEnchantment = getNativeEnchantment(entry.getKey());
+            if (nativeEnchantment != null){
+                if (meta instanceof EnchantmentStorageMeta book) book.addStoredEnchant(nativeEnchantment, level, true);
+                else meta.addEnchant(nativeEnchantment, level, true);
+            } else legacy.add(entry.getKey().getId() + ":" + level);
+        }
+        if (legacy.isEmpty()) meta.getPersistentDataContainer().remove(enchantmentsKey);
+        else meta.getPersistentDataContainer().set(enchantmentsKey, PersistentDataType.STRING, String.join(";", legacy));
         item.setItemMeta(meta);
         updateLore(item);
     }
@@ -212,6 +228,7 @@ public class CustomEnchantManager {
 
             if (firstEnchantIndex >= 0){
                 for (CustomEnchant e : enchantments.keySet()){
+                    if (getNativeEnchantment(e) != null) continue;
                     finalLore.add(firstEnchantIndex, ChatUtils.chat(e.getDisplayEnchantment() + (e.getMaxLevel() > 1 ? " " +
                             (isUsingRomanNumerals ?
                                     ChatUtils.toRoman(enchantments.get(e)) :
@@ -219,6 +236,7 @@ public class CustomEnchantManager {
                 }
             } else {
                 for (CustomEnchant e : enchantments.keySet()){
+                    if (getNativeEnchantment(e) != null) continue;
                     finalLore.add(ChatUtils.chat(e.getDisplayEnchantment() + (e.getMaxLevel() > 1 ? " " +
                             (isUsingRomanNumerals ?
                                     ChatUtils.toRoman(enchantments.get(e)) :
@@ -254,6 +272,14 @@ public class CustomEnchantManager {
                     }
                 }
             }
+        }
+        ItemMeta meta = item.getItemMeta();
+        Map<Enchantment, Integer> nativeEnchants = meta instanceof EnchantmentStorageMeta book ? book.getStoredEnchants() : meta.getEnchants();
+        for (Map.Entry<Enchantment, Integer> entry : nativeEnchants.entrySet()){
+            NamespacedKey key = entry.getKey().getKey();
+            if (!key.getNamespace().equals("enchantssquared")) continue;
+            CustomEnchant custom = getEnchantmentFromType(key.getKey().toUpperCase(Locale.ROOT));
+            if (custom != null) totalEnchants.put(custom, entry.getValue());
         }
         return totalEnchants;
     }
@@ -328,6 +354,12 @@ public class CustomEnchantManager {
     }
 
     public void registerEnchant(CustomEnchant enchant){
+        // Allow disabling legacy enchantments without changing their IDs.
+        // Old PDC items keep their metadata but disabled effects do not run.
+        String id = enchant.getType().toLowerCase(java.util.Locale.ROOT);
+        YamlConfiguration nativeConfig = ConfigManager.getInstance()
+                .getConfig("config_native_enchants.yml").get();
+        if (nativeConfig.getStringList("blocked_base_enchants").contains(id)) return;
         if (enchant.isEnabled()) {
             allEnchants.put(enchant.getId(), enchant);
             if (EnchantsSquared.isValhallaHooked()) ValhallaHook.registerEnchantmentModifier(enchant);
@@ -502,7 +534,7 @@ public class CustomEnchantManager {
         if (ItemUtils.isAirOrNull(item)) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-        return meta.getPersistentDataContainer().has(enchantmentsKey, PersistentDataType.STRING);
+        return !getItemsEnchantsFromPDC(item).isEmpty();
     }
 
     public void reload(){

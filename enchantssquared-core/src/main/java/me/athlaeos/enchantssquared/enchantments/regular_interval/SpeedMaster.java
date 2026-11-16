@@ -5,6 +5,7 @@ import me.athlaeos.enchantssquared.config.ConfigManager;
 import me.athlaeos.enchantssquared.domain.MaterialClassType;
 import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.enchantments.LevelService;
+import me.athlaeos.enchantssquared.enchantments.LevelsFromAllEquipment;
 import me.athlaeos.enchantssquared.enchantments.LevelsFromMainHandAndEquipment;
 import me.athlaeos.enchantssquared.enchantments.LevelsFromOffHandAndEquipment;
 import me.athlaeos.enchantssquared.utility.EntityUtils;

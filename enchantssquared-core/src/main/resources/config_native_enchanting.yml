@@ -1,0 +1,156 @@
+# Native Paper registry ↔ ValhallaMMO Enchanting integration
+#
+# These enchants are actual Bukkit/Paper Enchantment instances. ValhallaMMO
+# only reads a hard-coded set of vanilla IDs from skills/enchanting.yml, so
+# EnchantsSquared explicitly registers the following formulas at onEnable.
+# They may be overridden in plugins/ValhallaMMO/skills/enchanting.yml under
+# quoted scalings."enchantssquared:lesser_sharpness" etc. No Valhalla jar edit.
+#
+# Normal registry max_level is V; ValhallaMMO amplification may produce VI+.
+# Native tiers inherit the same original enchanting skill rating and vanilla
+# scaling formula as Sharpness/Smite/Bane (not normalized NG band quality).
+# NG/perks decide WHICH native tier a player can receive, not the amplified
+# level. We preserve Valhalla's already-scaled vanilla roll, avoiding double
+# amplification.
+#
+# 45 limits the scaling component, not the enchanted item's total level.
+native_scalings_enabled: true
+native_scalings:
+  lesser_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  lesser_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  lesser_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_sharpness: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_smite: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_bane_of_arthropods: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+
+  # Additional native enchant families. Normal maxima are V/II/I/IV,
+  # but ValhallaMMO may amplify final item enchant levels above them.
+  lesser_power: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  advanced_power: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  supreme_power: (2/100) * %rating% - 2,ADD_ON_DEFAULT,1,45
+  lesser_punch: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  advanced_punch: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  supreme_punch: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  lesser_flame: 0,ADD_ON_DEFAULT,0,1
+  advanced_flame: 0,ADD_ON_DEFAULT,0,1
+  supreme_flame: 0,ADD_ON_DEFAULT,0,1
+  lesser_fire_aspect: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  advanced_fire_aspect: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  supreme_fire_aspect: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,8
+  lesser_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  advanced_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  supreme_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  lesser_fire_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  advanced_fire_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  supreme_fire_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  lesser_blast_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  advanced_blast_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  supreme_blast_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  lesser_projectile_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  advanced_projectile_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  supreme_projectile_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  lesser_magic_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  advanced_magic_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  supreme_magic_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+  magic_protection: (1/100) * %rating% - 1,ADD_ON_DEFAULT,1,45
+
+# Optional translation of ValhallaMMO enchanting perk bonuses to real custom enchantments
+enabled: true
+replacements:
+  lesser_power: power
+  advanced_power: power
+  supreme_power: power
+  lesser_punch: punch
+  advanced_punch: punch
+  supreme_punch: punch
+  lesser_flame: flame
+  advanced_flame: flame
+  supreme_flame: flame
+  lesser_fire_aspect: fire_aspect
+  advanced_fire_aspect: fire_aspect
+  supreme_fire_aspect: fire_aspect
+  lesser_protection: protection
+  advanced_protection: protection
+  supreme_protection: protection
+  lesser_fire_protection: fire_protection
+  advanced_fire_protection: fire_protection
+  supreme_fire_protection: fire_protection
+  lesser_blast_protection: blast_protection
+  advanced_blast_protection: blast_protection
+  supreme_blast_protection: blast_protection
+  lesser_projectile_protection: projectile_protection
+  advanced_projectile_protection: projectile_protection
+  supreme_projectile_protection: projectile_protection
+  lesser_magic_protection: protection
+  advanced_magic_protection: protection
+  supreme_magic_protection: protection
+  magic_protection: protection
+  excavation: efficiency
+  rejuvenation: unbreaking
+  kinship: fortune
+  crushing: sharpness
+  perforating: sharpness
+  plating: protection
+  beheading: looting
+  lesser_sharpness: sharpness
+  lesser_smite: smite
+  lesser_bane_of_arthropods: bane_of_arthropods
+  advanced_sharpness: sharpness
+  advanced_smite: smite
+  advanced_bane_of_arthropods: bane_of_arthropods
+  supreme_sharpness: sharpness
+  supreme_smite: smite
+  supreme_bane_of_arthropods: bane_of_arthropods
+categories:
+  lesser_power: OFFENSIVE
+  advanced_power: OFFENSIVE
+  supreme_power: OFFENSIVE
+  lesser_punch: OFFENSIVE
+  advanced_punch: OFFENSIVE
+  supreme_punch: OFFENSIVE
+  lesser_flame: OFFENSIVE
+  advanced_flame: OFFENSIVE
+  supreme_flame: OFFENSIVE
+  lesser_fire_aspect: OFFENSIVE
+  advanced_fire_aspect: OFFENSIVE
+  supreme_fire_aspect: OFFENSIVE
+  lesser_protection: DEFENSIVE
+  advanced_protection: DEFENSIVE
+  supreme_protection: DEFENSIVE
+  lesser_fire_protection: DEFENSIVE
+  advanced_fire_protection: DEFENSIVE
+  supreme_fire_protection: DEFENSIVE
+  lesser_blast_protection: DEFENSIVE
+  advanced_blast_protection: DEFENSIVE
+  supreme_blast_protection: DEFENSIVE
+  lesser_projectile_protection: DEFENSIVE
+  advanced_projectile_protection: DEFENSIVE
+  supreme_projectile_protection: DEFENSIVE
+  lesser_magic_protection: DEFENSIVE
+  advanced_magic_protection: DEFENSIVE
+  supreme_magic_protection: DEFENSIVE
+  magic_protection: DEFENSIVE
+  lesser_sharpness: OFFENSIVE
+  lesser_smite: OFFENSIVE
+  lesser_bane_of_arthropods: OFFENSIVE
+  advanced_sharpness: OFFENSIVE
+  advanced_smite: OFFENSIVE
+  advanced_bane_of_arthropods: OFFENSIVE
+  supreme_sharpness: OFFENSIVE
+  supreme_smite: OFFENSIVE
+  supreme_bane_of_arthropods: OFFENSIVE
+  excavation: UTILITY
+  rejuvenation: UTILITY
+  kinship: UTILITY
+  crushing: OFFENSIVE
+  perforating: OFFENSIVE
+  plating: DEFENSIVE
+  beheading: OFFENSIVE
+  bleeding: OFFENSIVE
+  reach: OFFENSIVE
+  dodge: DEFENSIVE
+  smithing: UTILITY
+  brewing: UTILITY

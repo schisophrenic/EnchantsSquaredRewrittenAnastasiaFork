@@ -4,7 +4,6 @@ import me.athlaeos.enchantssquared.EnchantsSquared;
 import me.athlaeos.enchantssquared.config.ConfigManager;
 import me.athlaeos.enchantssquared.utility.ChatUtils;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 
 import java.util.ArrayList;
@@ -33,10 +32,8 @@ public class CommandManager implements TabExecutor {
 
 	    ((HelpCommand) commands.get("help")).giveCommandMap(commands);
 
-		PluginCommand command = EnchantsSquared.getPlugin().getCommand("enchantssquared");
-		if (command != null){
-			command.setExecutor(this);
-		}
+		// Command registration is owned by EnchantsSquared.onEnable() via the
+		// Paper BasicCommand API. Paper plugins have no YAML command map.
 	}
 
 	public static CommandManager getInstance(){
@@ -52,7 +49,7 @@ public class CommandManager implements TabExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, org.bukkit.command.Command cmd, String name, String[] args) {
 		if (args.length == 0) {
-			sender.sendMessage(ChatUtils.chat(String.format("&dEnchants Squared v%s by Athlaeos", EnchantsSquared.getPlugin().getDescription().getVersion())));
+			sender.sendMessage(ChatUtils.chat(String.format("&dEnchants Squared v%s by Athlaeos", EnchantsSquared.getPlugin().getPluginMeta().getVersion())));
 			sender.sendMessage(ChatUtils.chat("&7/es help"));
 			return true;
 		}

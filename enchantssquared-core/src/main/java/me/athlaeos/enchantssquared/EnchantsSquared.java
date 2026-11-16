@@ -8,6 +8,26 @@ import me.athlaeos.enchantssquared.domain.Version;
 import me.athlaeos.enchantssquared.enchantments.CustomEnchant;
 import me.athlaeos.enchantssquared.hooks.WorldGuardHook;
 import me.athlaeos.enchantssquared.hooks.valhallammo.ValhallaHook;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeEnchantingPerkBridge;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaScalingBridge;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantsCommand;
+import me.athlaeos.enchantssquared.nativeenchants.ValhallaTierEnchantingListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantAliases;
+import me.athlaeos.enchantssquared.nativeenchants.NativeAttributeEnchantEngine;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSpecialEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSummonerEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantLootListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantConfigReference;
+import me.athlaeos.enchantssquared.hooks.valhallammo.NativeValhallaAttributeBridge;
+import me.athlaeos.enchantssquared.nativeenchants.NativeRangedEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeProtectionEnchantListener;
+import me.athlaeos.enchantssquared.nativeenchants.VanillaAttackPriorityListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeYamlEffectListener;
+import me.athlaeos.enchantssquared.nativeenchants.NativeSimpleEnchantConfig;
+import me.athlaeos.enchantssquared.nativeenchants.NativeEnchantmentEvolution;
+import me.athlaeos.enchantssquared.nativeenchants.NativeCustomEnchantActions;
 import me.athlaeos.enchantssquared.listeners.*;
 import me.athlaeos.enchantssquared.managers.CustomEnchantManager;
 import me.athlaeos.enchantssquared.managers.AnimationRegistry;
@@ -15,6 +35,9 @@ import me.athlaeos.enchantssquared.managers.RegularIntervalEnchantmentClockManag
 import me.athlaeos.enchantssquared.menus.MenuListener;
 import me.athlaeos.enchantssquared.utility.ChatUtils;
 import me.athlaeos.enchantssquared.version.NMS;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Registry;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -23,13 +46,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class EnchantsSquared extends JavaPlugin {
     private static EnchantsSquared plugin = null;
     private static boolean trinketsHooked = false;
     private static boolean valhallaHooked = false;
+    private NativeAttributeEnchantEngine nativeAttributeEngine;
+    private NativeSummonerEnchantListener nativeSummonerListener;
+    private NativeEnchantmentEvolution nativeEvolution;
     private static boolean worldGuardHooked = false;
     private static boolean mcMMOHooked = false;
     private static boolean jobsHooked = false;
@@ -64,12 +93,14 @@ public final class EnchantsSquared extends JavaPlugin {
         super.onLoad();
 
         saveConfig("config.yml");
+        saveConfig("config_native_enchants.yml");
 
         mcMMOHooked = hasPlugin("mcMMO");
         valhallaHooked = hasPlugin("ValhallaMMO");
         if (valhallaHooked){
             this.getLogger().info("ValhallaMMO hooked! Adding a bunch of cool stuff.");
             saveConfig("config_valhallammo.yml");
+            saveConfig("config_native_enchanting.yml");
         }
         worldGuardHooked = hasPlugin("WorldGuard");
         if (worldGuardHooked){
@@ -86,6 +117,10 @@ public final class EnchantsSquared extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
+        getLogger().warning("========== BETA TEST BUILD — DO NOT USE ON PRODUCTION SERVERS ==========");
+        getLogger().warning("Back up worlds, player data, inventories and all plugin configurations BEFORE testing.");
+        getLogger().warning("Native enchantments, ValhallaMMO scaling, loot rolls and smithing integration require in-game verification.");
+        getLogger().warning("========================================================================");
         if (!setupNMS()){
             logSevere("This version of Minecraft is not compatible with EnchantsSquared. Sorry!");
             getServer().getPluginManager().disablePlugin(this);
@@ -100,8 +135,25 @@ public final class EnchantsSquared extends JavaPlugin {
             new Metrics(this, 10596);
         }
 
+        // Apply configurable display-only names before legacy managers load.
+        // Preserves every existing item ID/PDC entry.
+        NativeEnchantAliases.apply();
         grindstonesEnabled = ConfigManager.getInstance().getConfig("config.yml").get().getBoolean("allow_grindstone_removal", true);
-        CommandManager.getInstance();
+        CommandManager legacyCommands = CommandManager.getInstance();
+        registerCommand("enchantssquared", "EnchantsSquared commands", List.of("es"), new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                legacyCommands.onCommand(source.getSender(), null, "es", args);
+            }
+            @Override
+            public Collection<String> suggest(CommandSourceStack source, String[] args) {
+                List<String> suggestions = legacyCommands.onTabComplete(source.getSender(), null, "es", args);
+                return suggestions == null ? List.of() : suggestions;
+            }
+        });
+        NativeEnchantsCommand nativeCommands = new NativeEnchantsCommand(this);
+        registerCommand("nativeenchants", "Native enchantment registry status", List.of("esnative"), (source, args) ->
+                nativeCommands.execute(source.getSender(), args));
 
         if (Version.currentVersionOrNewerThan(Version.MINECRAFT_1_14) && grindstonesEnabled) grindstoneListener = registerListener(new GrindstoneListener());
         anvilListener = registerListener(new AnvilListener(), "disable_anvil");
@@ -140,7 +192,65 @@ public final class EnchantsSquared extends JavaPlugin {
             enchant.onPluginEnable();
         }
         RegularIntervalEnchantmentClockManager.startClock();
-        if (valhallaHooked) ValhallaHook.registerValhallaEnchantments();
+        if (valhallaHooked) {
+            ValhallaHook.registerValhallaEnchantments();
+            // Native enchantments now exist in Paper's registry. Register their
+            // scalings with ValhallaMMO before any enchanting events can fire.
+            NativeValhallaScalingBridge.register();
+            // Existing vanilla perks/quality calculations run before tier substitution.
+            registerListener(new NativeEnchantingPerkBridge());
+        }
+        // The native enchantments have already been registered in Paper's
+        // ENCHANTMENT.compose lifecycle event, before worlds load.
+        YamlConfiguration nativeConfig = ConfigManager.getInstance().getConfig("config_native_enchants.yml").get();
+        // The Paper bootstrap already registered custom YAML enchants.
+        // Merge their metadata again at runtime so existing loot + attribute
+        // handlers see exactly the same source probabilities and levels.
+        YamlConfiguration simpleEnchants = NativeSimpleEnchantConfig.merge(
+                getDataFolder().toPath(), nativeConfig);
+        registerListener(new NativeCustomEnchantActions(this, simpleEnchants));
+        registerListener(new NativeYamlEffectListener(nativeConfig));
+        registerListener(new NativeRangedEnchantListener());
+        registerListener(new NativeProtectionEnchantListener(nativeConfig));
+        registerListener(new VanillaAttackPriorityListener(nativeConfig));
+        registerListener(new NativeSpecialEnchantListener(nativeConfig));
+        // Summoned allies are real Paper mobs with a native armor enchant,
+        // protection against owner-friendly fire, and short-lived stat mirrors.
+        nativeSummonerListener = new NativeSummonerEnchantListener(this, nativeConfig);
+        if (nativeSummonerListener.enabled()) {
+            registerListener(nativeSummonerListener);
+            getServer().getScheduler().runTaskTimer(this, nativeSummonerListener, 20L, 20L);
+        }
+        registerListener(new NativeEnchantLootListener(this, nativeConfig));
+        nativeAttributeEngine = new NativeAttributeEnchantEngine(this, nativeConfig);
+        if (valhallaHooked) {
+            NativeValhallaAttributeBridge.register(nativeAttributeEngine);
+        }
+        if (nativeAttributeEngine.isEnabled()) {
+            getServer().getScheduler().runTaskTimer(this, nativeAttributeEngine, 1L, 20L);
+            // AIR_DRAG is an explicitly configured pseudo-attribute. This
+            // routine does nothing unless an equipped enchant grants it.
+            getServer().getScheduler().runTaskTimer(this,
+                    nativeAttributeEngine::tickAirDrag, 1L, 1L);
+        }
+        NativeEnchantConfigReference.refresh(this);
+        if (valhallaHooked) {
+            registerListener(new ValhallaTierEnchantingListener(nativeConfig));
+        }
+        // Run after NG tier replacement and custom enchanting rolls. Also
+        // normalize anvil, smithing and older illegal double-enchanted items.
+        nativeEvolution = new NativeEnchantmentEvolution(this, nativeConfig, simpleEnchants);
+        registerListener(nativeEvolution);
+        getServer().getScheduler().runTaskTimer(this, nativeEvolution, 20L, 100L);
+        int nativeCount = 0;
+        var nativeDefs = nativeConfig.getConfigurationSection("enchantments");
+        if (nativeDefs != null) {
+            for (String id : nativeDefs.getKeys(false)) {
+                if (!nativeDefs.getBoolean(id + ".enabled", true)) continue;
+                if (Registry.ENCHANTMENT.get(new NamespacedKey("enchantssquared", id)) != null) nativeCount++;
+            }
+        }
+        logInfo("Native enchantments found in registry: " + nativeCount + " (Paper Java bootstrap; no datapack).");
     }
 
     public static NMS getNms() {
@@ -167,6 +277,8 @@ public final class EnchantsSquared extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (nativeSummonerListener != null) nativeSummonerListener.shutdown();
+        if (nativeAttributeEngine != null) nativeAttributeEngine.clean();
         // Plugin shutdown logic
         for (CustomEnchant e : CustomEnchantManager.getInstance().getAllEnchants().values()){
             if (e instanceof AttributeEnchantment){
