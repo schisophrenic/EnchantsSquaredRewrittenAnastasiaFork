@@ -13,6 +13,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -148,6 +149,22 @@ public final class NativeEnchantLootListener implements Listener {
             if (book != null) items.add(book);
         }
         event.setLoot(items);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEliteSpawn(CreatureSpawnEvent event) {
+        LivingEntity mob = event.getEntity();
+        // ValhallaEquipment assigns its elite PDC tag during its own spawn
+        // handler. Wait until the tag and equipment are finalized.
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!mob.isValid() || !elite(mob)) return;
+            EntityEquipment equipment = mob.getEquipment();
+            if (equipment == null) return;
+            for (ItemStack item : equipment.getArmorContents())
+                enchantEquipment(item, "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+            enchantEquipment(equipment.getItemInMainHand(),
+                    "elite_enchanted_books.elite_equipment_enchant_chance", 0.20);
+        }, 2L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
