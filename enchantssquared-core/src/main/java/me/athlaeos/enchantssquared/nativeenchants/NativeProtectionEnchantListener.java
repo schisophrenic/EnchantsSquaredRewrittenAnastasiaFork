@@ -42,10 +42,12 @@ public final class NativeProtectionEnchantListener implements Listener {
             "ENTITY_EXPLOSION", "BLOCK_EXPLOSION", "EXPLOSION", "DRAGON_BREATH");
     private final Map<String, Enchantment[]> nativeTypes = new HashMap<>();
     private final Map<String, Enchantment> vanillaTypes = new HashMap<>();
+    private final EnchantmentPriority priority;
     private final double magicPerLevel;
     private final double magicMaximum;
 
     public NativeProtectionEnchantListener(YamlConfiguration nativeConfig) {
+        priority = new EnchantmentPriority(nativeConfig.getConfigurationSection("priority_scaling"));
         magicPerLevel = Math.max(0.0, Math.min(0.1,
                 nativeConfig.getDouble("settings.magic_protection_percent_per_level", 0.03)));
         // Hard safety ceiling: even a malicious/accidental YAML value of 1
@@ -109,53 +111,69 @@ public final class NativeProtectionEnchantListener implements Listener {
         }
         boolean elemental = isElemental(cause, custom);
 
-        long vanillaEpf = 0;
-        long nativeEpf = 0;
-        long magicLevels = 0;
+        double vanillaEpf = 0;
+        double adjustedEpf = 0;
+        double magicLevels = 0;
+        boolean mixed = false;
         for (ItemStack item : armor) {
             if (item == null || item.getType().isAir()) continue;
+            Map<String, Double> weights = priority.weights(item, true);
+            mixed |= weights.size() > 1;
             if (general) {
-                vanillaEpf += vanilla(item, vanillaTypes.get("protection"));
-                nativeEpf += total(item, nativeTypes.get("protection"));
+                int old = vanilla(item, vanillaTypes.get("protection"));
+                vanillaEpf += old;
+                adjustedEpf += old * weights.getOrDefault("protection", 0.0)
+                        + total(item, nativeTypes.get("protection")) * weights.getOrDefault("protection", 0.0);
             }
             if (fire) {
-                vanillaEpf += 2L * vanilla(item, vanillaTypes.get("fire_protection"));
-                nativeEpf += 2L * total(item, nativeTypes.get("fire_protection"));
+                int old = vanilla(item, vanillaTypes.get("fire_protection"));
+                vanillaEpf += 2.0 * old;
+                adjustedEpf += 2.0 * (old + total(item, nativeTypes.get("fire_protection")))
+                        * weights.getOrDefault("fire_protection", 0.0);
             }
             if (explosion) {
-                vanillaEpf += 2L * vanilla(item, vanillaTypes.get("blast_protection"));
-                nativeEpf += 2L * total(item, nativeTypes.get("blast_protection"));
+                int old = vanilla(item, vanillaTypes.get("blast_protection"));
+                vanillaEpf += 2.0 * old;
+                adjustedEpf += 2.0 * (old + total(item, nativeTypes.get("blast_protection")))
+                        * weights.getOrDefault("blast_protection", 0.0);
             }
             if (projectile) {
-                vanillaEpf += 2L * vanilla(item, vanillaTypes.get("projectile_protection"));
-                nativeEpf += 2L * total(item, nativeTypes.get("projectile_protection"));
+                int old = vanilla(item, vanillaTypes.get("projectile_protection"));
+                vanillaEpf += 2.0 * old;
+                adjustedEpf += 2.0 * (old + total(item, nativeTypes.get("projectile_protection")))
+                        * weights.getOrDefault("projectile_protection", 0.0);
             }
             if (falling) {
-                vanillaEpf += 3L * vanilla(item, vanillaTypes.get("feather_falling"));
+                double fallingEpf = 3.0 * vanilla(item, vanillaTypes.get("feather_falling"));
+                vanillaEpf += fallingEpf;
+                adjustedEpf += fallingEpf;
             }
-            if (elemental) magicLevels += total(item, nativeTypes.get("magic_protection"));
+            if (elemental) {
+                magicLevels += total(item, nativeTypes.get("magic_protection"))
+                        * weights.getOrDefault("magic_protection", 0.0);
+            }
         }
-        if (nativeEpf <= 0 && magicLevels <= 0) return;
+        if (!mixed && adjustedEpf == vanillaEpf && magicLevels <= 0) return;
 
-        // Vanilla handles the vanilla EPF itself; only add the missing
-        // percentage to emulate a combined EPF cap without double counting.
-        double already = Math.min(0.80, vanillaEpf * 0.04);
-        double allStandard = Math.min(0.80, (vanillaEpf + nativeEpf) * 0.04);
-        double desired = elemental
-                ? Math.min(magicMaximum, allStandard + magicLevels * magicPerLevel)
-                : allStandard;
-        desired = Math.max(already, desired);
-        if (desired <= already) return;
-        double additionalFraction = (desired - already) / (1.0 - already);
-        event.setDamage(Math.max(0.0, event.getDamage() * (1.0 - additionalFraction)));
+        // Bukkit's vanilla enchantment mitigation is already part of the
+        // pipeline. Convert from its unmodified EPF to our target EPF once;
+        // unlike an extra reduction, this can also reduce stacked vanilla
+        // protections without deleting their enchantments.
+        double vanillaFraction = Math.min(0.80, vanillaEpf * 0.04);
+        double desired = Math.min(0.80, adjustedEpf * 0.04);
+        if (elemental) desired = Math.min(magicMaximum, desired + magicLevels * magicPerLevel);
+        desired = Math.max(0.0, desired);
+        double correction = (1.0 - desired) / (1.0 - vanillaFraction);
+        event.setDamage(Math.max(0.0, event.getDamage() * correction));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCombust(EntityCombustEvent event) {
         if (!(event.getEntity() instanceof LivingEntity victim) || victim.getEquipment() == null) return;
-        int levels = 0;
+        double levels = 0;
         for (ItemStack armor : victim.getEquipment().getArmorContents()) {
-            levels += total(armor, nativeTypes.get("fire_protection"));
+            levels += total(armor, nativeTypes.get("fire_protection"))
+                    * priority.multiplier(armor, "fire_protection", true);
         }
         if (levels <= 0) return;
         // Vanilla Fire Protection also shortens burning duration by 15%
