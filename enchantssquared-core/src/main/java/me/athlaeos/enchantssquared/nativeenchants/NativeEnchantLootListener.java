@@ -238,6 +238,44 @@ public final class NativeEnchantLootListener implements Listener {
                         || existing.equals(enchantment));
     }
 
+    /**
+     * Select exactly one enabled enchantment per successful loot roll.
+     * Vanilla enchantments have weight 1; native entries use rarity weights.
+     * Progression-gated tier enchantments are never granted as random loot.
+     */
+    private ItemStack randomEliteBook() {
+        ConfigurationSection definitions = config.getConfigurationSection("enchantments");
+        List<Entry> nativeCandidates = new ArrayList<>();
+        double totalWeight = vanillaBookPool.size();
+        if (definitions != null) {
+            for (String id : definitions.getKeys(false)) {
+                if (!definitions.getBoolean(id + ".enabled", true)
+                        || id.startsWith("lesser_") || id.startsWith("advanced_")
+                        || id.startsWith("supreme_")) continue;
+                Enchantment enchant = Registry.ENCHANTMENT.get(
+                        new NamespacedKey("enchantssquared", id));
+                if (enchant == null) continue;
+                Entry entry = new Entry(enchant,
+                        definitions.getString(id + ".rarity", "rare"), Map.of());
+                nativeCandidates.add(entry);
+                totalWeight += rarityWeight(entry.rarity());
+            }
+        }
+        if (totalWeight <= 0) return null;
+        double selected = ThreadLocalRandom.current().nextDouble() * totalWeight;
+        for (Enchantment enchant : vanillaBookPool) {
+            selected -= 1.0;
+            if (selected < 0) return book(enchant);
+        }
+        for (Entry entry : nativeCandidates) {
+            selected -= rarityWeight(entry.rarity());
+            if (selected < 0) return book(entry);
+        }
+        return nativeCandidates.isEmpty()
+                ? book(vanillaBookPool.get(vanillaBookPool.size() - 1))
+                : book(nativeCandidates.get(nativeCandidates.size() - 1));
+    }
+
     private ItemStack makeEquipment(String source) {
         if (!EnchantsSquared.isValhallaHooked()) return null;
         ItemStack item = NativeLowQualityEquipmentLoot.create(config);
