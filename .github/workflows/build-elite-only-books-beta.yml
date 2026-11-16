@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EnchantsSquared-Elite-Books-BETA
-          path: dist-test/EnchantsSquared_Enchantment_Priority_BETA.jar
+          path: dist-test/EnchantsSquared_Elite_Books_BETA.jar
           if-no-files-found: error
           retention-days: 14
 
