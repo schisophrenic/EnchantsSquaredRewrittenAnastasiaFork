@@ -58,12 +58,18 @@ public final class NativeEnchantmentEvolution implements Listener, Runnable {
             if (item == null) continue;
             NamespacedKey previous = parse(item.getString("base"));
             if (previous == null) continue;
+            NamespacedKey base = previous;
             // The family switch controls NEW tier rolls, not exclusivity:
             // existing tiered items must never stack with the vanilla base.
             for (Map<?, ?> tier : item.getMapList("tiers")) {
                 NamespacedKey current = parse(String.valueOf(tier.get("enchantment")));
                 if (current == null || current.equals(previous)) continue;
                 parent.put(current, previous);
+                if (item.getBoolean("enabled", true)) {
+                    // A genuine higher-tier book promotes an earlier stage
+                    // in the anvil, preserving ValhallaMMO's actual level.
+                    upgrades.put(current, new Upgrade(base, current, 1, 1, true, "ANVIL"));
+                }
                 previous = current;
             }
         }
@@ -228,6 +234,15 @@ public final class NativeEnchantmentEvolution implements Listener, Runnable {
             Enchantment source = Registry.ENCHANTMENT.get(candidate.source());
             if (source == null) continue;
             int existing = leftEnchants.getOrDefault(source, 0);
+            // For NG tier books, any earlier stage may be evolved without
+            // requiring a separate book for every intermediate tier.
+            if (candidate.inherit() && existing < candidate.required()) {
+                for (var input : leftEnchants.entrySet()) {
+                    if (sameTrack(input.getKey(), output)
+                            && rank(input.getKey().getKey()) < rank(candidate.target()))
+                        existing = Math.max(existing, input.getValue());
+                }
+            }
             if (existing < candidate.required()) continue;
             // Cannot replace one enchant with another that conflicts with
             // an unrelated property; do not silently delete those properties.
@@ -294,7 +309,10 @@ public final class NativeEnchantmentEvolution implements Listener, Runnable {
         // commands, creative or inventories without touching unrelated items.
         if (!player.isOnline()) return;
         ItemStack[] contents = player.getInventory().getContents();
-        for (ItemStack item : contents) normalize(item);
+        for (int slot = 0; slot < contents.length; slot++) {
+            ItemStack item = contents[slot];
+            if (normalize(item)) player.getInventory().setItem(slot, item);
+        }
     }
 
     private static Map<Enchantment, Integer> allEnchantments(ItemStack item) {
