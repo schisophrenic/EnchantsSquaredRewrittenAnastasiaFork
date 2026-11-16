@@ -3,6 +3,7 @@ name: Build Elite-Only Enchanted Books BETA
 on:
   push:
     branches:
+      - master
       - feature/elite-only-enchanted-books-26-3
   workflow_dispatch:
 
