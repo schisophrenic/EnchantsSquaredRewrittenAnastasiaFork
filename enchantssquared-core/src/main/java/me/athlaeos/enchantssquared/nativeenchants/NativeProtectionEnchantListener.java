@@ -170,10 +170,9 @@ public final class NativeProtectionEnchantListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCombust(EntityCombustEvent event) {
         if (!(event.getEntity() instanceof LivingEntity victim) || victim.getEquipment() == null) return;
-        double levels = 0;
+        int levels = 0;
         for (ItemStack armor : victim.getEquipment().getArmorContents()) {
-            levels += total(armor, nativeTypes.get("fire_protection"))
-                    * priority.multiplier(armor, "fire_protection", true);
+            levels += total(armor, nativeTypes.get("fire_protection"));
         }
         if (levels <= 0) return;
         // Vanilla Fire Protection also shortens burning duration by 15%
